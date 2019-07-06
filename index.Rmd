@@ -1,6 +1,6 @@
 ---
-title: "Estimating power in linear and generalized linear mixed models: an open introduction
-  and tutorial in R."
+title: 'Estimating power in linear and generalized linear mixed models: an open introduction
+  and tutorial in R.'
 author: "Kumle, L., Vo, M. L-H., & Draschkow, D."
 ---
 
