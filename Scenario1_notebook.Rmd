@@ -1,6 +1,5 @@
 ---
-title: 'Estimating power in linear and generalized linear mixed models: an open introduction
-  and tutorial in R. '
+title: 'Scenario 1: using fitted model from published data '
 output:
   html_document:
     df_print: paged
@@ -12,12 +11,6 @@ latest update: March 2019
 
 ***
 ***
-
-## Scenario 1: using fitted model from published data
-
-&nbsp;
-&nbsp;
-
 Sufficient power and precision in confirmatory analyses are important for the reliability, replicability, and interpretation of empirical findings. Calculating power, however, is not necessarily a trivial task and in certain cases this might pose a feasibility barrier to scientists. One of these cases is power analysis for liner mixed-effect models (LMMs). LMMs are a powerful tool for modeling fixed and random effects simultaneously, but do not offer a feasible analytic solution to estimate the probability that a test correctly rejects the null hypothesis.
 
 A flexible and more intuitive alternative approach are simulation-based power analyses which can use a linear-mixed model fitted with *lme4* (Bates, Maechler, Bolker & Walker, 2015) to inform the parameters of the simulation. For more details on the theoretical background see Kumle, Vo & Draschkow (in preparation).

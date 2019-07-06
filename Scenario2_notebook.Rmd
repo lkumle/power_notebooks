@@ -1,5 +1,5 @@
 ---
-title: "Scenario 2: having strong and detailed a priori assumptions"
+title: "Scenario 2: having strong and detailed a priori assumptions "
 output:
   html_document: default
   word_document: default
@@ -11,12 +11,6 @@ latest update: March 2019
 
 ***
 ***
-
-## Scenario 2: having strong and detailed a priori assumptions
-
-&nbsp;
-&nbsp;
-
 Sufficient power and precision in confirmatory analyses is important for the reliability, replicability, and interpretation of empirical findings. Calculating power, however, is not necessarily a trivial task and in certain cases this might pose a feasibility barrier to scientists. One of these cases is power analysis for (generalized) liner mixed-effect models (LMMs and GLMMs). They are a powerful tool for modelling fixed and random effects simultaneously, but do not offer a feasible analytic solution to estimate the probability that a test correctly rejects the null hypothesis.
 
 This requires a simulation based solution, which always start with a fitted model to inform the simulation. Generally, some sort of data is required to fit a model with lme4. However, there are certain scenarios where such data is either not available yet or a researcher already has strong experience and beliefs about a specific effect. SIMR can be used to create lme4 objects from scratch without fitting it to data (Green & Macleod, 2016).
@@ -179,7 +173,7 @@ Now that we have a model on hand, we can start with the actual power analysis in
 
 SIMR provides a simple function, that runs the power simulation called powerSim(). Note that SIMR can only simulate power for one fixed effect at a time. If a model has more than one fixed effect, we need to specify which effect we want to test. We will start with "NativeLanguage" and will simulate power for "Frequency" and the interaction later on.  
 
-```{r eval=, warning=FALSE}
+```{r eval=FALSE, warning=FALSE}
 # run power analysis
 power <- powerSim(artificial_lmer, test= fixed("NativeLanguage"))
 

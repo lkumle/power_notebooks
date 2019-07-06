@@ -1,5 +1,5 @@
 ---
-title: "Mixedpower power analysis with exploratory data"
+title: "Scenario 3: using fitted model from pilot data"
 output:
   html_document: default
   word_document: default
@@ -10,12 +10,6 @@ latest update: March 2019
 
 ***
 ***
-
-## Scenario 3: using fitted model from pilot data
-
-&nbsp;
-&nbsp;
-
 Sufficient power and precision in confirmatory analyses is important for the reliability, replicability, and interpretation of empirical findings. Calculating power, however, is not necessarily a trivial task and in certain cases this might pose a feasibility barrier to scientists. One of these cases is power analysis for (generalized) liner mixed-effect models (LMMs and GLMMs). They are a powerful tool for modelling fixed and random effects simultaneously, but do not offer a feasible analytic solution to estimate the probability that a test correctly rejects the null hypothesis.
 This requires a simulation based solution, which always start with a fitted model to inform the simulation.
 
