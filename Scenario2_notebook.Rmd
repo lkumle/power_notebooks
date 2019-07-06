@@ -1,6 +1,5 @@
 ---
-title: "Estimating power in linear and generalized linear mixed models: an open introduction
-  and tutorial in R."
+title: "Scenario 2: having strong and detailed a priori assumptions"
 output:
   html_document: default
   word_document: default
