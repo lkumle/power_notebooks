@@ -126,17 +126,17 @@ $(document).ready(function () {
 
 
 <p>Kumle, L., Vo, M. L-H.., &amp; Draschkow, D.</p>
-<p>latest update: March 2019</p>
+<p>latest update: August 2019</p>
 <hr />
 <hr />
-<p>This Notebook functions as an introduction for the R package <a href="https://github.com/DejanDraschkow/mixedpower"><em>mixedpower</em></a> designed to perform simulation-based power analysis in (generalized) liner mixed-effect models (LMMs and GLMMs).</p>
-<p>Sufficient power and precision in confirmatory analyses is important for the reliability, replicability, and interpretation of empirical findings. Calculating power, however, is not necessarily a trivial task and in certain cases this might pose a feasibility barrier to scientists. One of these cases is power analysis for (generalized) liner mixed-effect models (LMMs and GLMMs). They are a powerful tool for modelling fixed and random effects simultaneously, but do not offer a feasible analytic solution to estimate the probability that a test correctly rejects the null hypothesis. This requires a simulation-based solution.</p>
-<p>In this tutorial, we provide a step-by-step workflow for simulation-based power analyses with mixedpower and introduce different functions included in this package. For more background information on how to appropriatly use this tool in different scenarios see Kumle, Vo, &amp; Draschkow (in preparation).</p>
+<p>This Notebook functions as an introduction for the R package <a href="https://github.com/DejanDraschkow/mixedpower"><em>mixedpower</em></a> (Kumle, Vo &amp; Draschkow, 2018) designed to perform simulation-based power analysis in (generalised) liner mixed-effect models (LMMs and GLMMs).</p>
+<p>Sufficient power and precision in confirmatory analyses is important for the reliability, replicability, and interpretation of empirical findings. Calculating power, however, is not necessarily a trivial task and in certain cases this might pose a feasibility barrier to scientists. One of these cases is power analysis for (generalised) liner mixed-effect models (LMMs and GLMMs). They are a powerful tool for modelling fixed and random effects simultaneously, but do not offer a feasible analytic solution to estimate the probability that a test correctly rejects the null hypothesis. This requires a simulation-based solution.</p>
+<p>In this tutorial, we provide a step-by-step workflow for simulation-based power analyses with mixedpower and introduce different functions included in this package. For more background information on how to appropriately use this tool in different scenarios see Kumle, Vo, &amp; Draschkow (in preparation).</p>
 <hr />
 <hr />
 <div id="simulation-based-power-analysis" class="section level3">
 <h3><strong>Simulation-based power analysis</strong></h3>
-<p>Simulation-based power analyses are a flexible and intuitive alternative approach to analytic power solutions (Thomas &amp; Juanes, 1996). In simple terms, one basic quastion behind power analysis is:</p>
+<p>Simulation-based power analyses are a flexible and intuitive alternative approach to analytic power solutions (Thomas &amp; Juanes, 1996). In simple terms, one basic question behind power analysis is:</p>
 <blockquote>
 <p>Suppose there really is an effect and I run my experiment one hundred times - how many times will I get a statistically significant result? (Coppock, 2013)</p>
 </blockquote>
@@ -156,7 +156,7 @@ $(document).ready(function () {
 <pre class="r"><code># install mixedpower package
 if (!require(&quot;devtools&quot;)) {
     install.packages(&quot;devtools&quot;, dependencies = TRUE)}
-devtools::install_github(&quot;DejanDraschkow/mixedpower&quot;) </code></pre>
+devtools::install_github(&quot;DejanDraschkow/mixedpower&quot;)</code></pre>
 <p> </p>
 <div id="a-function-for-calculating-power" class="section level4">
 <h4><strong>A function for calculating power</strong></h4>
@@ -164,27 +164,27 @@ devtools::install_github(&quot;DejanDraschkow/mixedpower&quot;) </code></pre>
 <pre class="r"><code>library(mixedpower)
 
 #core function to perform power analysis
-mixedpower(model_emp, data_emp, subvar,fixed_effects, 
+mixedpower(model_emp, data_emp, subvar,fixed_effects,
            sample_sizes, n_sim, critical_value, confidence_level,
            databased = T, safeguard = T, rnorm = F)</code></pre>
-<p>In the following sections, we will elaborate on each argument of the function to conceptualize the inner workings of the analysis. Some of these arguments could be extracted automatically from the fitted model, however, we choose to provide a certain explicitness for clarity. Which argument values were chosen would need to be reported by the researcher to provide a transparent description of the procedure. The help function (&gt; ?mixedpower) can be explored for a more concise treatment.</p>
+<p>In the following sections, we will elaborate on each argument to conceptualise the inner workings of the analysis. Some of these arguments could be extracted automatically from the fitted model, however, we choose to provide a certain explicitness for clarity. Which argument values were chosen would need to be reported by the researcher to provide a transparent description of the procedure. The help function (&gt; ?mixedpower) can be explored for a more concise treatment.</p>
 <p> </p>
 </div>
 <div id="empirical-data-and-model" class="section level4">
 <h4><strong>Empirical data and model</strong></h4>
-<p>Informing the parameters of the simulation is an extremely crucial step as they determine how accurate the simulation represents the underlying experiment. Mixedpower is aimed at GLMMs/LMMs fitted with lme4 ??? a power analysis in this context uses such a model to inform the simulation. Thus, a power analysis in mixedpower starts with such a model.</p>
+<p>Informing the parameters of the simulation is an extremely crucial step as they determine how accurate the simulation represents the underlying experiment. Mixedpower is aimed at GLMMs/LMMs fitted with lme4 (Bates, Maechler, Bolker &amp; Walker, 2015) ??? a power analysis in this context uses such a model to inform the simulation. Thus, a power analysis in mixedpower starts with such a model.</p>
 <p>As an example, we will use a simple model fitted to some hypothetical data called “exemplarData”. <strong>Note</strong>: Mixedpower can handle much more complicated models with a more complex fixed and random effect structure.</p>
 <pre class="r"><code># exemplar model
-exemplarModel &lt;- lmer(x ~ fixef1 * fixef2 + 
-                    (1|Subject) + (1|Item), 
+exemplarModel &lt;- lmer(x ~ fixef1 * fixef2 +
+                    (1|Subject) + (1|Item),
                     data = exemplarData)</code></pre>
 <p>Accordently, the arguments <em>model_emp</em> and <em>data_emp</em> refer to the model used to inform the simulation and the data the model is fitted on.</p>
-<pre class="r"><code># model and data used to inform simulation 
+<pre class="r"><code># model and data used to inform simulation
 model_emp &lt;- exemplarModel
 data_emp &lt;- exemplarData</code></pre>
-<p>The mixedpower()-function requires further specifics about the data and model at hand in order to include all necessary information into the simulation. As mixedpower will simulate new data sets, it is important to ensure that all specifications like customized contrasts on fixed effects and covariates are transferred to the simulated data. Therefor, we need to provide the names of the fixed effects and covariates we have included in our model so that the mixedpower() function will check and transfer all specified contrasts. For this, the argument <em>fixed_effects</em> is used.</p>
+<p>The mixedpower()-function requires further specifics about the data and model at hand in order to include all necessary information into the simulation. As mixedpower will simulate new data sets, it is important to ensure that all specifications like customised contrasts on fixed effects and covariates are transferred to the simulated data. Therefor, we need to provide the names of the fixed effects and covariates we have included in our model so that the mixedpower() function will check and transfer all specified contrasts. For this, the argument <em>fixed_effects</em> is used.</p>
 <p>Moreover, the argument <em>subvar</em> expects the name of the column containing the participant identifier (subvar = “Subject”). Besides determining how many subjects the provided data set contains, this is used to correctly integrate the simulated data into the structure of the provided empirical data set.</p>
-<pre class="r"><code># include relevant information 
+<pre class="r"><code># include relevant information
 subvar &lt;- &quot;Subject&quot;
 fixed_effects &lt;- c(&quot;fixef1&quot;, &quot;fixef2&quot;)</code></pre>
 <p> </p>
@@ -206,7 +206,7 @@ sample_sizes &lt;- c(10, 20, 30, 40)</code></pre>
 </div>
 <div id="test-of-statistical-significance" class="section level4">
 <h4><strong>Test of statistical significance</strong></h4>
-<p>Deciding if an effect exceeds a significance threshold therefor is a critical aspect of every simulation-based power analysis and heavily influences its outcome. In general, rising this threshold will lead to lower estimated power as it becomes harder to reach it and vice versa. Mixedpower relies on lme4, which does not provide p-values. Even though there are methods available to compute p-values in mixed models, they are affiliated with ambiguity because degrees of freedom are hard to determine in mixed models and mixedpower therefore works with the available t values for linear mixed models or z values for generalized linear mixed models. Concluding, we need to set a critical_value in form of a t or z values depending on the model on hand and all coefficients exceeding this value would be counted as significant. In the present example, we decided to set critical_value = 2.</p>
+<p>Deciding if an effect exceeds a significance threshold therefor is a critical aspect of every simulation-based power analysis and heavily influences its outcome. In general, rising this threshold will lead to lower estimated power as it becomes harder to reach it and vice versa. Mixedpower relies on lme4, which does not provide p-values. Even though there are methods available to compute p-values in mixed models, they are affiliated with ambiguity because degrees of freedom are hard to determine in mixed models and mixedpower therefore works with the available t values for linear mixed models or z values for generalised linear mixed models. Concluding, we need to set a critical_value in form of a t or z values depending on the model on hand and all coefficients exceeding this value would be counted as significant. In the present example, we decided to set critical_value = 2.</p>
 <pre class="r"><code># set critical_value
 critical_value &lt;- 2</code></pre>
 <p> </p>
@@ -224,9 +224,10 @@ confidence_level &lt;- 0.68</code></pre>
 <div id="power-simulation" class="section level4">
 <h4><strong>Power simulation</strong></h4>
 <p>We now can run the power simulation for the data at hand. For this, we will use the function mixedpower() which handles and combines simulations for all specified sample sizes and provides us with a power estimate derived from the actual effect sizes of the data (databased), as well as the conservative estimate of safeguard power (safeguard). The relevant parameters specified in the steps above will be used.</p>
-<pre class="r"><code>power_output &lt;- mixedpower(model_emp = exemplarModel, data_emp = exemplarModel, subvar = &quot;Subject&quot;, 
-                           fixed_effects = c(&quot;fixef1&quot;, &quot;fixef2&quot;), critical_value = 2,
-                           sample_sizes = c(10,20,30,40), n_sim = 1000, confidence_level = 0.68,
+<pre class="r"><code>power_output &lt;- mixedpower(model_emp = exemplarModel, data_emp = exemplarModel, 
+                           subvar = &quot;Subject&quot;, fixed_effects = c(&quot;fixef1&quot;, &quot;fixef2&quot;),
+                           critical_value = 2, sample_sizes = c(10,20,30,40), n_sim = 1000,
+                           confidence_level = 0.68,
                            databased = T, safeguard = T, rnorm = F)</code></pre>
 <p> </p>
 </div>
@@ -234,6 +235,13 @@ confidence_level &lt;- 0.68</code></pre>
 <h4><strong>Interpreting and visualizing the power analysis </strong></h4>
 <p>The output provided by mixedpower() contains power values for every effect and all specified sample sizes. The power values are provided both from the original effect sizes (databased) or the corrected conservative estimates (safeguard).</p>
 <pre class="r"><code>power_output</code></pre>
+<pre><code>##      10    20    30    40      mode        effect
+## 1 0.560 0.696 0.827 0.951 databased        fixef1
+## 2 1.000 1.000 1.000 1.000 databased        fixef2
+## 3 0.420 0.563 0.697 0.875 databased fixef1:fixef2
+## 4 0.266 0.342 0.434 0.594 safeguard        fixef1
+## 5 1.000 1.000 1.000 1.000 safeguard        fixef2
+## 6 0.142 0.200 0.272 0.349 safeguard fixef1:fixef2</code></pre>
 <p>What do we see here?</p>
 <p>power_output contains power values for every effect and all sample sizes we specified. Additionaly, power_output includes the mode (databased and safeguard) to specify under which condition the simulation was run.</p>
 <p>Plotting the output allows us to better understand it. For this, mixedpower provides a function called multiplotPower which plots power as a function of sample size for all effects included in power_output.</p>
@@ -251,8 +259,11 @@ multiplotPower(power_output)</code></pre>
 </div>
 <div id="references" class="section level3">
 <h3><strong>References</strong></h3>
+<p>Albers, C., &amp; Lakens, D. (2018). When power analyses based on pilot data are biased: Inaccurate effect size estimators and follow-up bias. Journal of Experimental Social Psychology. <a href="https://doi.org/10.1016/j.jesp.2017.09.004" class="uri">https://doi.org/10.1016/j.jesp.2017.09.004</a></p>
+<p>Coppock, A. (2013). 10 Things to Know About Statistical Power. Retrieved September 20, 2018, from <a href="http://egap.org/methods-guides/10-things-you-need-know-about" class="uri">http://egap.org/methods-guides/10-things-you-need-know-about</a> statistical-power</p>
 <p>Douglas Bates, Martin Maechler, Ben Bolker, Steve Walker (2015). Fitting Linear Mixed-Effects Models Using lme4. Journal of Statistical Software, 67(1), 1-48. <a href="doi:10.18637/jss.v067.i01" class="uri">doi:10.18637/jss.v067.i01</a>.</p>
 <p>Kumle, L., Vo, M. L-H.., &amp; Draschkow, D. (2018). Mixedpower: a library for estimating simulation-based power for mixed models in R. <a href="https://doi.org/10.5281/zenodo.1341047" class="uri">https://doi.org/10.5281/zenodo.1341047</a></p>
+<p>Kumle, L., Vo, M. L-H., &amp; Draschkow, D. (in preparation). Estimating power in linear and generalized linear mixed models: an open introduction and tutorial in R.</p>
 <p>Perugini, M., Gallucci, M., &amp; Costantini, G. (2014). Safeguard Power as a Protection Against Imprecise Power Estimates. Perspectives on Psychological Science, 9(3), 319-332. <a href="https://doi.org/10.1177/1745691614528519" class="uri">https://doi.org/10.1177/1745691614528519</a></p>
 <p>Thomas, L., &amp; Juanes, F. (1996). The importance of statistical power analysis: An example from Animal Behaviour. Animal Behaviour, 52(4), 856-859. <a href="https://doi.org/10.1006/anbe.1996.0232" class="uri">https://doi.org/10.1006/anbe.1996.0232</a></p>
 </div>
