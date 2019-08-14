@@ -212,11 +212,21 @@ library(simr)</code></pre>
 <p>In a first step, we will simulate power for exactly the number of subjects and the specified effect size in our FLPmodel. For this, we can use the powerSim()-function. Explore ?powerSim for a treatment of all possible argument specification.</p>
 <p><strong>Note</strong>: SIMR can simulate power for only one effect at a time and as a default runs the simulation for the first effect specified in the model. It therefor is important to specify morphological complexity (i.e. “sn.c”“) as the effect of interest.</p>
 <pre class="r"><code># run power analysis
-power &lt;- powerSim(fit = FLPmodel, test = fixed(&quot;sn.c&quot;))</code></pre>
+power_snc &lt;- powerSim(fit = FLPmodel, test = fixed(&quot;sn.c&quot;))</code></pre>
 <pre class="r"><code># let's have a look at the results
-print(power)
-
-# --&gt; output will be included soon!</code></pre>
+print(power_snc)</code></pre>
+<pre><code>## Power for predictor 'sn.c', (95% confidence interval):
+##       95.00% (88.72, 98.36)
+## 
+## Test: Kenward Roger (package pbkrtest)
+##       Effect size for sn.c is -0.079
+## 
+## Based on 100 simulations, (100 warnings, 0 errors)
+## alpha = 0.05, nrow = 13523
+## 
+## Time elapsed: 22 h 6 m 45 s
+## 
+## nb: result might be an observed power calculation</code></pre>
 <p>The output tells us that power for the effect size of world length is 94 %. Remember that the FLPmodel was fitted with data from 48 participants. The power value we get from this analysis gives us a first impression of the power linked to our effect of interest but does not really help us to choose a sample size for our future study. For this, running a simulation based on different sample sizes would be much more informative.</p>
 <p>To do exactly this, SIMR offers the powerCurve() - function to explore the relationship of sample size and power. Let’s run such an analysis on our effect of interest in order to investigate the <em>sample size x power</em> relationship.</p>
 <p>Although, before we can hand over the FLPmodel to powerCurve() we need to “extend” it to the largest sample size we are interested in. The SIMR function ‘extend()’ duplicates data used to fit the model to simulate more participants. For this to work we need to provide the function with the variable containing the subject ID and the largest sample size we are interested in. As morphological complexity (“sn.c”) already had a power of 94% with 48 subjects, we decide that the largest sample size we are interested in is 60.</p>

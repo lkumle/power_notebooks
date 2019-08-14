@@ -105,14 +105,13 @@ load("~/Dropbox/Power/notebooks/simr_power_scenario1_snc.Rdata")
 
 ```{r eval= F, warning=FALSE}
 # run power analysis
-power <- powerSim(fit = FLPmodel, test = fixed("sn.c"))
+power_snc <- powerSim(fit = FLPmodel, test = fixed("sn.c"))
 ```
 
-```{r eval = F}
+```{r}
 # let's have a look at the results
-print(power)
+print(power_snc)
 
-# --> output will be included soon!
 ```
 
 The output tells us that power for the effect size of world length is 94 %. Remember that the FLPmodel was fitted with data from 48 participants. The power value we get from this analysis gives us a first impression of the power linked to our effect of interest but does not really help us to choose a sample size for our future study. For this, running a simulation based on different sample sizes would be much more informative.
