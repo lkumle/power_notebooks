@@ -170,8 +170,8 @@ So let's create a corresponding glmer. Again, we simply hand all necessary infor
 ```{r}
 # create glmer
 artificial_glmer <- makeGlmer(formula = Correct ~ NativeLanguage * Frequency + (1 | Subject)
-                              + (1 | Word),
-                              family = "poisson", fixef = fixed_effects, VarCorr = random_variance,
+                              + (1 | Word), family = "binomial", fixef = fixed_effects, 
+                              VarCorr = random_variance,
                               data = artificial_data)
 
 # lets have a look!

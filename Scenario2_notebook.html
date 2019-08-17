@@ -219,11 +219,11 @@ summary(artificial_lmer)</code></pre>
 ## Formula: Speed ~ NativeLanguage * Frequency + (1 | Subject) + (1 | Word)
 ##    Data: artificial_data
 ## 
-## REML criterion at convergence: 372.2
+## REML criterion at convergence: 397.4
 ## 
 ## Scaled residuals: 
 ##     Min      1Q  Median      3Q     Max 
-## -2.7961 -0.6835 -0.0080  0.6673  3.3706 
+## -3.2246 -0.6520  0.0285  0.6359  2.9641 
 ## 
 ## Random effects:
 ##  Groups   Name        Variance Std.Dev.
@@ -234,16 +234,16 @@ summary(artificial_lmer)</code></pre>
 ## 
 ## Fixed effects:
 ##                          Estimate Std. Error t value
-## (Intercept)               1.70000    0.05309  32.022
-## NativeLanguage           -0.25000    0.10205  -2.450
-## Frequency                 0.02000    0.03645   0.549
-## NativeLanguage:Frequency  0.03000    0.04160   0.721
+## (Intercept)               1.70000    0.05393  31.521
+## NativeLanguage           -0.25000    0.10263  -2.436
+## Frequency                 0.02000    0.03621   0.552
+## NativeLanguage:Frequency  0.03000    0.04132   0.726
 ## 
 ## Correlation of Fixed Effects:
 ##             (Intr) NtvLng Frqncy
 ## NativeLangg  0.000              
-## Frequency   -0.276  0.000       
-## NtvLngg:Frq  0.000 -0.164  0.000</code></pre>
+## Frequency   -0.324  0.000       
+## NtvLngg:Frq  0.000 -0.194  0.000</code></pre>
 <p> </p>
 <p><strong>Create Glmer</strong></p>
 <p>Since SIMR also provides the makeGlmer() function, let’s have a quick look at it! The only difference compared to the makeLmer() function is that we need to specify a “family”&quot; instead of a residual standard deviation (sigma). Pretending we wanted to model a variable indicating if participants correctly classified the words during the lexical decision task, we would use a binary response measurement “Correct” and therefor would need a GLMM to model it. A hypothetical formula could look like this:</p>
@@ -252,24 +252,24 @@ formula_glmer &lt;- Correct ~ NativeLanguage * Frequency + (1 | Subject) + (1 | 
 <p>So let’s create a corresponding glmer. Again, we simply hand all necessary information to the appropriate SIMR function:</p>
 <pre class="r"><code># create glmer
 artificial_glmer &lt;- makeGlmer(formula = Correct ~ NativeLanguage * Frequency + (1 | Subject)
-                              + (1 | Word),
-                              family = &quot;poisson&quot;, fixef = fixed_effects, VarCorr = random_variance,
+                              + (1 | Word), family = &quot;binomial&quot;, fixef = fixed_effects, 
+                              VarCorr = random_variance,
                               data = artificial_data)
 
 # lets have a look!
 summary(artificial_glmer)</code></pre>
 <pre><code>## Generalized linear mixed model fit by maximum likelihood (Laplace
 ##   Approximation) [glmerMod]
-##  Family: poisson  ( log )
+##  Family: binomial  ( logit )
 ## Formula: Correct ~ NativeLanguage * Frequency + (1 | Subject) + (1 | Word)
 ##    Data: artificial_data
 ## 
 ##      AIC      BIC   logLik deviance df.resid 
-##  10315.6  10349.2  -5151.8  10303.6     1994 
+##   2245.3   2278.9  -1116.7   2233.3     1994 
 ## 
 ## Scaled residuals: 
 ##     Min      1Q  Median      3Q     Max 
-## -2.3806 -0.5849  0.0642  0.7672  4.4621 
+## -1.6354  0.6269  0.6585  0.6770  0.7785 
 ## 
 ## Random effects:
 ##  Groups  Name        Variance Std.Dev.
@@ -279,18 +279,18 @@ summary(artificial_glmer)</code></pre>
 ## 
 ## Fixed effects:
 ##                          Estimate Std. Error z value Pr(&gt;|z|)    
-## (Intercept)               1.70000    0.05484  30.998   &lt;2e-16 ***
-## NativeLanguage           -0.25000    0.10569  -2.365    0.018 *  
-## Frequency                 0.02000    0.04558   0.439    0.661    
-## NativeLanguage:Frequency  0.03000    0.06869   0.437    0.662    
+## (Intercept)                1.7000     0.1096  15.514   &lt;2e-16 ***
+## NativeLanguage            -0.2500     0.2166  -1.154    0.248    
+## Frequency                  0.0200     0.1746   0.115    0.909    
+## NativeLanguage:Frequency   0.0300     0.3441   0.087    0.931    
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
 ## Correlation of Fixed Effects:
 ##             (Intr) NtvLng Frqncy
-## NativeLangg  0.013              
-## Frequency   -0.335 -0.022       
-## NtvLngg:Frq -0.028 -0.263  0.082</code></pre>
+## NativeLangg -0.011              
+## Frequency   -0.769  0.010       
+## NtvLngg:Frq  0.010 -0.766 -0.013</code></pre>
 <hr />
 <hr />
 </div>
