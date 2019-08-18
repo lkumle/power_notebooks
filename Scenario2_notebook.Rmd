@@ -11,11 +11,11 @@ latest update: August 2019
 
 ***
 ***
-Sufficient power and precision in confirmatory analyses is important for the reliability, replicability, and interpretation of empirical findings. Calculating power, however, is not necessarily a trivial task and in certain cases this might pose a feasibility barrier to scientists. One of these cases is power analysis for (generalized) liner mixed-effect models (LMMs and GLMMs). They are a powerful tool for modelling fixed and random effects simultaneously, but do not offer a feasible analytic solution to estimate the probability that a test correctly rejects the null hypothesis.
+Power and precision in confirmatory analyses is important for the reliability and replicability of empirical findings. Calculating power, however, is not necessarily a trivial task and in certain cases this might pose a feasibility barrier to scientists. One of these cases is power analysis for linear and generalized linear mixed-effect models (LMMs, GLMMs). Mixed models are a powerful tool for modelling fixed and random effects simultaneously, but do not offer a feasible analytic solution to estimate the probability that a test correctly rejects the null hypothesis.
 
-This requires a simulation based solution, which always start with a fitted model to inform the simulation. Generally, some sort of data is required to fit a model with lme4. However, there are certain scenarios where such data is either not available yet or a researcher already has strong experience and beliefs about a specific effect. SIMR can be used to create lme4 objects from scratch without fitting it to actual data (Green & Macleod, 2016).
+This requires a simulation based solution, which always starts with a fitted model to inform the simulation. Generally, some data is required to fit a model with lme4. However, there are certain scenarios where such data is either not available yet or a researcher already has strong experience and assumptions about a specific effect. SIMR can be used to create lme4 objects from scratch without fitting it to actual data (Green & Macleod, 2016).
 
-In this tutorial, we provide a step-by-step workflow on how to set up such a model and use it to simulate power for a following study. For more detailed information see Kumle, Vo & Draschkow (in preparation).
+In this tutorial, we provide a step-by-step workflow on how to set up such a model and use it to simulate power for a following study. For more detailed information see Kumle, Vo & Draschkow (in preparation) and Green and Macleod (2016).
 
 ***
 ***
@@ -41,12 +41,12 @@ library(simr)
 
 &nbsp;
 
-Setting up a model from scratch implies that we need to specify all included parameters by ourselves and those parameters could be informed and justified through previous work, literature, experience, and knowledge. Being able to justify those parameters is key in order for the following power analysis to be useful as the simulation for a following study is only accurate when the effect size estimates are accurate (Albers & Lakens, 2018) Therefor, considerable thought should be put into this. Unfortunately, giving general advice on this is hard as this process is highly dependent on the research question on hand.
+Setting up a model from scratch implies that we need to specify all included parameters by ourselves and those parameters could be informed and justified through previous work, literature, experience, and knowledge. Being able to justify those parameters is key in order for the following power analysis to be useful - as the simulation for a planned study is only accurate when the effect size estimates are accurate (Albers & Lakens, 2018) Therefor, considerable thought should be put into this. Unfortunately, giving general advice on this is hard as this process is highly dependent on the specific research question.
 
 **Example Study**
-For the present tutorial, we will pretend to plan a study investigating the effect of participant's native language (English or non-English) in a lexical decision task (i.e. participants are asked to decided if some displayed letters form a word or not). Besides native language we are also interested in the effect of how common a displayed word is in the English language (i.e. word frequency) as well as the interaction between both and we will measure reaction times/speed as a dependent variable.
+For the present tutorial, we will pretend to plan a study investigating the effect of participant's native language (English or non-English) in a lexical decision task (i.e. participants are asked to decided if some displayed letters form a word or not). Besides native language we are also interested in the effect of how common a displayed word is in the English language (i.e. word frequency) as well as the interaction between both. We plan to measure reaction times/speed as a dependent variable.
 
-To simulate power for our study, we therefor need to set up a model displaying the effect of native language and word frequency on the speed of lexical decisions. The intended lme4 formula for this model can be seen here:
+To simulate power for our study, we therefor need to set up a model including the effects of native language and word frequency on the speed of lexical decisions. The intended lme4 formula for this model can be seen here:
 
 ```{r}
 # formula for artificial model
@@ -92,10 +92,10 @@ artificial_data["NativeLanguage"] <- native_language
 # [This step should be replaced with actual ratings!]
 frequency_ratings <- runif(100)
 
-# create vector for data set: Multiple by 20 as we have 20 subject in our artificial data set who each respond to all words
+# create vector for data set: Multiply by 20 as we have 20 subject in our artificial data set who each respond to all words
 frequency <- sort(rep(frequency_ratings, 20))
 
-#reorder artificial data so that every word corresponds to one frequency rating
+# reorder artificial data so that every word corresponds to one frequency rating
 artificial_data <- artificial_data[order(artificial_data$Word),]
 # match frequency with words
 artificial_data["Frequency"] <- frequency
@@ -170,7 +170,7 @@ So let's create a corresponding glmer. Again, we simply hand all necessary infor
 ```{r}
 # create glmer
 artificial_glmer <- makeGlmer(formula = Correct ~ NativeLanguage * Frequency + (1 | Subject)
-                              + (1 | Word), family = "binomial", fixef = fixed_effects, 
+                              + (1 | Word), family = "binomial", fixef = fixed_effects,
                               VarCorr = random_variance,
                               data = artificial_data)
 
@@ -205,7 +205,7 @@ load("~/Dropbox/Power/notebooks/simr_power_scenario2_lmer.Rdata")
 print(power)
 ```
 
-To explore power over a range of different sample sizes, the powerCurve() function can be used. This is especially useful if the power analysis is used to decide on an adequate sample size. To do so, we first need to "extend" our artificial data set to largest sample size we are interested in. SIMR provides an extend()- function that simply duplicates the existing data set to the intended sample size. Assuming we also want to explore power for sample sizes of 30, 40 and 50, we will extend the artificial data used to fit our artificial model to 50.
+To explore power over a range of different sample sizes, the powerCurve() function can be used. This is especially useful if the power analysis is used to decide on an adequate sample size. To do so, we first need to "extend" our artificial data set to the largest sample size of interest. SIMR provides an extend()- function that simply duplicates the existing data set to the intended sample size. Assuming we also want to explore power for sample sizes of 30, 40 and 50, we will extend the artificial data used to fit our artificial model to 50.
 
 ```{r eval = F}
 # 1. extend data set
@@ -240,7 +240,7 @@ print(powerC)
 &nbsp;
 
 Building a model from scratch can be a very useful alternative for setting up a simulation-based power analysis, especially when a lot of prior knowledge concerning the effects of interest exist. Moreover, it allows to inspect small changes in parameters as it is possible to create different plausible models and simulate power for all of them. This way, implications for sample size recommendations can be investigated.
-However, as also seen in this tutorial justifying the parameters used to build the model can be difficult. The more complex a model, the more difficult it can become to correctly estimate the structure of the data and to conduct a useful power analysis.
+However, as also seen in this tutorial, justifying the parameters used to build the model can be difficult. The more complex a model, the more difficult it can become to correctly estimate the structure of the data and to conduct a useful power analysis.
 
 
 ***

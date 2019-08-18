@@ -10,7 +10,7 @@ latest update: March 2019
 
 ***
 ***
-Sufficient power and precision in confirmatory analyses is important for reliability, replicability, and interpretation of empirical findings. Calculating power, however, is not necessarily a trivial task and in certain cases this might pose a feasibility barrier to scientists. One of these cases is power analysis for (generalized) liner mixed-effect models (LMMs and GLMMs). They are a powerful tool for modelling fixed and random effects simultaneously, but do not offer a feasible analytic solution to estimate the probability that a test correctly rejects the null hypothesis.
+Power and precision in confirmatory analyses is important for the reliability and replicability of empirical findings. Calculating power, however, is not necessarily a trivial task and in certain cases this might pose a feasibility barrier to scientists. One of these cases is power analysis for linear and generalized linear mixed-effect models (LMMs, GLMMs). Mixed models are a powerful tool for modelling fixed and random effects simultaneously, but do not offer a feasible analytic solution to estimate the probability that a test correctly rejects the null hypothesis.
 This requires a simulation based solution, which always start with a fitted model to inform the simulation.
 
 In this tutorial, we provide a step-by-step workflow on how to use pilot data to simulate power for a follow-up study. For more background information see Kumle, Vo & Draschkow (in preparation).
@@ -64,7 +64,7 @@ Using the *lme4* package (Bates, Maechler, Bolker & Walker, 2015), we will perfo
 library(lme4)
 
 ## this is the final model
-SPEEDmodel <- lmer(speed ~ NativeLanguage.c * Frequency.c + (1  + Frequency.c | Subject) + 
+SPEEDmodel <- lmer(speed ~ NativeLanguage.c * Frequency.c + (1  + Frequency.c | Subject) +
                    (1 + NativeLanguage.c | Word), data=LEXDEC)
 
 ## lets have a look at this model
@@ -131,7 +131,7 @@ sample_sizes <- c(15, 21, 30, 45)
 ##### **Test of statistical significance**
 Deciding if an effect exceeds a significance threshold is a critical aspect of every simulation-based power analysis and heavily influences its outcome as power is computed as the relation of significant to all simulations. However, mixedpower relies on lme4, which does not provide p-values.
 
-Mixedpower therefore works with the available t values for linear mixed models or z values for generalized linear mixed models. Concluding, we need to set a critical_value in form of a t or z values depending on the model on hand and all coefficients exceeding this value would be counted as significant. In the present example, we decided to set critical_value = 2.
+Mixedpower therefore works with the available t values for linear mixed models or z values for generalized linear mixed models. Concluding, we need to set a critical_value in form of a t or z value depending on the model on hand and all coefficients exceeding this value would be counted as significant. In the present example, we decided to set critical_value = 2.
 
 ```{r}
 # set critical_value
@@ -142,7 +142,7 @@ critical_value <- 2
 
 ##### **Protection against bias in data**
 
-The accuracy of a simulation-based calculation of power and its interpretability is dependent on how well the model is capturing the data (Thomas & Juanes, 1996) and on how well the data is capturing the underlying effect of interest. Especially data consisting of only few observations or participants (e.g. from pilot or exploratory studies) carry the risk of uncertainty in respect to effects in the data.
+The accuracy of a simulation-based calculation of power and its interpretability is dependent on how well the model is capturing the data (Thomas & Juanes, 1996) and on how well the data is capturing the underlying effect of interest. Especially data consisting of only few observations or participants (e.g. from pilot or exploratory studies) carry the risk of uncertainty in respect to effect sizes in the data.
 
 Mixedpower offers an adaptation of *safeguard power* proposed by Perugini, Gallucci, & Costantini (2014). In this approach, a confidence interval is computed around the beta coefficients in the model used for simulation. Using the lower bound of the interval leads to a more conservative simulation. In the present example we decided on a confidence interval of 80%.
 
@@ -156,7 +156,7 @@ confidence_level <- 0.80
 
 ##### **Power simulation**
 
-We now can run the power simulation for the data at hand. For this, we will use the function mixedpower() which handles and combines simulations for all specified sample sizes and provides us with a power estimate derived from the actual effect sizes of the data (databased), as well as the conservative estimate of safeguard power (safeguard). The relevant parameters specified in the steps above will be used.
+We can now run the power simulation for the data at hand. For this, we will use the function mixedpower() which handles and combines simulations for all specified sample sizes and provides us with a power estimate derived from the actual effect sizes of the data (databased), as well as the conservative estimate of safeguard power (safeguard). The relevant parameters specified in the steps above will be used.
 
 ```{r eval=FALSE, warning=FALSE}
 # run power analysis
@@ -198,11 +198,11 @@ multiplotPower(power_output)
 ![](/Users/leah/Dropbox/Power/notebooks/Scenario 3/plots_manuscript.png)
 
 
-In the current example, the data consisted of 21 participants, thus each power value at 21 corresponds to the power for the data's actual sample size . That is, the effect of Native Language had a power of 70%, the one of Frequency 100% and the interaction was at 56%. As to be expected, power is lower for smaller sample sizes and higher for larger ones. For this data, each participant would have added about 1% per participant for all effects, except for the one at ceiling. The conservative safeguard estimated lower power values for both non-ceiling effects. Its slope was similar to the databased estimates for the effect of Native Language, but not as steep for the interaction.
+In the current example, the data consisted of 21 participants, thus each power value at 21 corresponds to the power for the data's actual sample size. That is, the effect of Native Language had a power of 70%, the one of Frequency 100% and the interaction was at 56%. As to be expected, power is lower for smaller sample sizes and higher for larger ones. For this data, each participant would have added about 1% per participant for all effects, except for the one at ceiling. The conservative safeguard option, estimated lower power values for both non-ceiling effects. Its slope was similar to the databased estimates for the effect of Native Language, but not as steep for the interaction.
 
 &nbsp;
 
-To use this output to decide on a sample size for our future study, we first need to agree on a goal power.  A well-known threshold value for the probability of finding an effect in cognitive neuroscience and psychology is 80% and represents a compromise between the need for adequate power and the effort/cost needed to further increase power (Brysbaert & Stevens, 2018). Using this threshold and the databased estimate, we would aim to test around 45 subjects. Taking the safeguard estimate into account would increase this number even more.
+To use this output to decide on a sample size for our future study, we first need to agree on a goal power. A well-known threshold value for the probability of finding an effect in cognitive neuroscience and psychology is 80% and represents a compromise between the need for adequate power and the effort/cost needed to further increase power (Brysbaert & Stevens, 2018). Using this threshold and the databased estimate, we would aim to test around 45 subjects. Taking the safeguard estimate into account would increase this number even more.
 
 
 

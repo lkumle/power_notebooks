@@ -11,11 +11,11 @@ latest update: August 2019
 
 ***
 ***
-Sufficient power and precision in confirmatory analyses are important for the reliability, replicability, and interpretation of empirical findings. Calculating power, however, is not necessarily a trivial task and in certain cases this might pose a feasibility barrier to scientists. One of these cases is power analysis for liner mixed-effect models (LMMs). LMMs are a powerful tool for modelling fixed and random effects simultaneously, but do not offer a feasible analytic solution to estimate the probability that a test correctly rejects the null hypothesis.
+Power and precision in confirmatory analyses is important for the reliability and replicability of empirical findings. Calculating power, however, is not necessarily a trivial task and in certain cases this might pose a feasibility barrier to scientists. One of these cases is power analysis for linear and generalized linear mixed-effect models (LMMs, GLMMs). Mixed models are a powerful tool for modelling fixed and random effects simultaneously, but do not offer a feasible analytic solution to estimate the probability that a test correctly rejects the null hypothesis.
 
 A flexible and more intuitive alternative approach are simulation-based power analyses which can use a linear-mixed model fitted with *lme4* (Bates, Maechler, Bolker & Walker, 2015) to inform the parameters of the simulation. For more details on the theoretical background see Kumle, Vo & Draschkow (in preparation).
 
-In this notebook we outline a scenario in which published studies and data are available and used as a starting point. First, we will demonstrate how to estimate power for single effects using the SIMR package (Green & Macleod, 2016). Next, we will utilise [*mixedpower*](https://github.com/DejanDraschkow/mixedpower) (Kumle, Vo & Draschkow, 2018) to simulate power for all specified effects  simultaneously.
+In this notebook we outline a scenario in which published studies and data are available and used as a starting point. First, we will demonstrate how to estimate power for single effects using the SIMR package (Green & Macleod, 2016). Next, we will utilize [*mixedpower*](https://github.com/DejanDraschkow/mixedpower) (Kumle, Vo & Draschkow, 2018) to simulate power for all specified effects  simultaneously.
 
 ***
 ***
@@ -30,20 +30,16 @@ In their eye-tracking experiment, Yan et al. (2014) examined the influence of wo
 
 We will use this data set to run a power analysis for a planned study investigating and confirming the influence of different parameters on first landing positions while reading.
 
-To focus on the actual power analysis procedure we already preprocessed the data set according to the author's analysis which can be downloaded [here](https://www.dropbox.com/s/ply8xkg123d4ee0/Yan_et_al.RData?dl=0).  
+To focus on the actual power analysis procedure, we already preprocessed the data set according to the author's analysis which can be downloaded [here](https://www.dropbox.com/s/ply8xkg123d4ee0/Yan_et_al.RData?dl=0).  
 
 ```{r}
 # get data
 load("Yan_et_al.RData") # data set is called "YanData"
 ```
 
-Informing the parameters of the simulation is a critical step and this tutorial is aimed at GLMMs/LMMs fitted with lme4 a power analysis in this context starts with such a model. 
+Informing the parameters of the simulation is a critical step and this tutorial is aimed at GLMMs/LMMs fitted with lme4. A power analysis in this context starts with such a model. We will use a simplified version of the final model provided by Yan et al. (2014). The full analysis and data can be found at [http://read.psych.uni-potsdam.de](http://read.psych.uni-potsdam.de/index.php?option=com_content&view=article&id=132:yan-et-al-2014-cognition-eye-movements-guided-by-morphological-structure-evidence-from-the-uighur-language&catid=12:publications&Itemid=11).
 
-
-In this tutorial, we will use a simplified version of the final model provided by Yan et al. (2014). 
-The full analysis and data can be found at [http://read.psych.uni-potsdam.de](http://read.psych.uni-potsdam.de/index.php?option=com_content&view=article&id=132:yan-et-al-2014-cognition-eye-movements-guided-by-morphological-structure-evidence-from-the-uighur-language&catid=12:publications&Itemid=11).
-
-Let's have a look at our model: 
+Let's have a look at our model:
 
 ```{r}
 library(lme4)
@@ -54,16 +50,16 @@ FLPmodel <- lmer(flp ~ wl.c * ls.c * sn.c + (1|nsub) + (1|nsen),
 summary(FLPmodel, corr = F)
 ```
 
- Variable descriptions: 
- 
+ Variable descriptions:
+
      wl.c: centered word length
      ls.c: centered launch site
      sn.c: centered number of suffixes
      nsub: subject ID variable
      nsen: sentence variable (stimulus)
      wid: variable coding the individual words
-     
-As we can see, FLPmodel looks at the effects of word length, launch site and number of suffixes (morphological complexity) on the first landing position while reading as well as at their interactions. As random factors we specified between-subject and between-item variance. 
+
+As we can see, FLPmodel looks at the effects of word length, launch site and number of suffixes (morphological complexity) on the first landing position while reading as well as at their interactions. As random factors we specified between-subject and between-item (sentences) variance.
 
 ***
 ***
@@ -76,7 +72,7 @@ First, we will simulate power for one specific effect in the FLPmodel using SIMR
 
 Let's assume our effect of interest for a follow-up study is *morphological complexity* (i.e. number of suffixes). To justify and decide on a sample size for this study, we decide to run a power analysis based completely on the published data and fitted model.
 
-To do so, we first need to install and load the SIMR package (Green & Macleod, 2016). Note that SIMR only needs to be installed once and loading the package is sufficient once it is installed.
+To do so, we first need to install and load the SIMR package (Green & Macleod, 2016). Note, that SIMR only needs to be installed once and loading the package is sufficient once it is installed.
 
 ```{r eval=FALSE, message=FALSE, warning=FALSE}
 ## install SIMR
@@ -96,7 +92,7 @@ SIMR offers two easy-to-use functions which can be used to simulate and examine 
 
 In a first step, we will simulate power for exactly the number of subjects and the specified effect size in our FLPmodel. For this, we can use the powerSim()-function. Explore ?powerSim for a treatment of all possible argument specification.
 
-**Note**: SIMR can simulate power for only one effect at a time and as a default runs the simulation for the first effect specified in the model. It therefor is important to specify morphological complexity (i.e. "sn.c"") as the effect of interest.
+**Note**: SIMR can simulate power for only one effect at a time and by default runs the simulation for the first effect specified in the model. Therefor, it is  important to specify morphological complexity (i.e. "sn.c"") as the effect of interest.
 
 ```{r include=FALSE}
 # load output in the background
@@ -116,9 +112,9 @@ print(power_snc)
 
 The output tells us that power for the effect size of world length is 94 %. Remember that the FLPmodel was fitted with data from 48 participants. The power value we get from this analysis gives us a first impression of the power linked to our effect of interest but does not really help us to choose a sample size for our future study. For this, running a simulation based on different sample sizes would be much more informative.
 
-To do exactly this, SIMR offers the powerCurve() - function to explore the relationship of sample size and power. Let's run such an analysis on our effect of interest in order to investigate the *sample size x power* relationship. 
+To do exactly this, SIMR offers the powerCurve() - function to explore the relationship of sample size and power. Let's run such an analysis on our effect of interest in order to investigate the *sample size x power* relationship.
 
-Although, before we can hand over the FLPmodel to powerCurve() we need to "extend" it to the largest sample size we are interested in. The SIMR function 'extend()' duplicates data used to fit the model to simulate more participants. For this to work we need to provide the function with the variable containing the subject ID and the largest sample size we are interested in. As morphological complexity ("sn.c") already had a power of 94% with 48 subjects, we decide that the largest sample size we are interested in is 60.
+Before we can hand over the FLPmodel to powerCurve() we need to "extend" it to the largest sample size we are interested in. The SIMR function 'extend()' duplicates data used to fit the model to simulate more participants. For this to work we need to provide the function with the variable containing the subject ID and the largest sample size we are interested in. As morphological complexity ("sn.c") already had a power of 94% with 48 subjects, we decide that the largest sample size we are interested in is 60.
 
 ```{r eval = F}
 # extend FLPmodel to use powerCurver()
@@ -149,7 +145,7 @@ As can be expected, power is lower for smaller sample sizes. To use this output 
 ***
 In conclusion, using SIMR can be especially useful for scenarios in which there is a single effect of interest. However, there are cases when more than one effect from a model are of interest. Running a separate power analysis for each effect can be very time consuming (note the runtime of over 60 hours to simulate power for one effect and different sample sizes above) and it would be more convenient to just simulate power for all effects at once.
 
-Another tool for simulation-based power analysis is [*mixedpower*](https://github.com/DejanDraschkow/mixedpower) (Kumle, Vo & Draschkow, 2018) which allows to simulate power for all effects in a model. 
+Another tool for simulation-based power analysis is [*mixedpower*](https://github.com/DejanDraschkow/mixedpower) (Kumle, Vo & Draschkow, 2018) which allows to simulate power for all effects in a model.
 
 In the following section, we will conduct a power analysis with mixedpower.
 
@@ -211,7 +207,7 @@ fixed_effects <- c("wl.c","ls.c", "sn.c")
 
 As noted before, power in a simulation-based approach is computed as the proportion of significant simulations to all simulations. Thus, we need to define the number of simulations we want to run. We suggest running at least 1000 simulations (n_sim = 1000) but fewer runs can be used to check if the analysis is running smoothly.
 
-Similar to the powerCurve() function in SIMR, mixedpower allows to simulate power over a range of sample sizes. For that, we need to specify the sample sizes we want to simulate power for. Using the original sample size of the study on hand as an anchor, we will indicate a range of plausible sample sizes (sample_sizes = c(20, 30, 40, 48, 60)) and n_sim simulations will be conducted for each sample size. 
+Similar to the powerCurve() function in SIMR, mixedpower allows to simulate power over a range of sample sizes. For that, we need to specify the sample sizes we want to simulate power for. Using the original sample size of the study as an anchor, we will indicate a range of plausible sample sizes (sample_sizes = c(20, 30, 40, 48, 60)) and n_sim simulations will be conducted for each sample size.
 
 ```{r}
 # simulation parameters
@@ -223,7 +219,7 @@ sample_sizes <- c(20, 30, 40, 48, 60)
 
 #### **Test of statistical significance**
 
-Deciding if an effect exceeds a significance threshold is a critical aspect of every simulation-based power analysis and heavily influences its outcome. In general, rising this threshold will lead to lower estimated power as it becomes harder to reach it and vice versa.  Mixedpower relies on lme4, which does not provide p-values. Even though there are methods available to compute p-values in mixed models, they are affiliated with ambiguity because degrees of freedom are hard to determine. Mixedpower therefore works with the available t values for linear mixed models or z values for generalised linear mixed models. Concluding, we need to set a critical_value in form of a t or z  values depending on the model on hand and all coefficients exceeding this value would be counted as significant. In the present example, we decided to set critical_value = 2.
+Deciding if an effect exceeds a significance threshold is a critical aspect of every simulation-based power analysis and heavily influences its outcome. In general, rising this threshold will lead to lower estimated power as it becomes harder to reach it and vice versa.  Mixedpower relies on lme4, which does not provide p-values. Even though there are methods available to compute p-values in mixed models, they are affiliated with ambiguity because degrees of freedom are hard to determine. Mixedpower therefore works with the available t values for linear mixed models or z values for generalized linear mixed models. Concluding, we need to set a critical_value in form of a t or z  values depending on the model on hand and all coefficients exceeding this value would be counted as significant. In the present example, we decided to set critical_value = 2.
 
 ```{r}
 # set critical_value
@@ -249,7 +245,7 @@ confidence_level <- 0.68
 #### **Power simulation**
 
 Now we are all set to run the power simulation for the data at hand. For this, we will use the function mixedpower() which handles and combines simulations for all specified sample sizes and provides us with a power estimate derived from the actual effect sizes of the data (databased), as well as the conservative estimate of safeguard power (safeguard). The relevant parameters specified in the steps above will be used.
-**Note**: 'rnorm' is an experimental option for a more conservative simulation that is not discussed in this tutorial. It therefor is set to FALSE to exclude it from the simulation. 
+**Note**: 'rnorm' is an experimental option for a more conservative simulation that is not discussed in this tutorial. It therefor is set to FALSE to exclude it from the simulation.
 
 
 ```{r eval=FALSE, message=FALSE, warning=FALSE}
@@ -274,7 +270,7 @@ power_output
 ```
 What do we see here?
 
-power_output contains power values for every effect and  interactions for all sample sizes we specified. Additionally, power_output includes the mode (databased and safeguard) which specifies if a correcting of the effect size was applied. Plotting our results can give us a better impression so let's use the mixedpower function multiplotPower() to do so: 
+power_output contains power values for every effect and  interactions for all sample sizes we specified. Additionally, power_output includes the mode (databased and safeguard) which specifies if a correction of the effect size was applied. Plotting our results can give us a better impression, so let's use the mixedpower function multiplotPower() to do so:
 
 
 ```{r eval=FALSE, warning=FALSE}
@@ -282,7 +278,7 @@ power_output contains power values for every effect and  interactions for all sa
 multiplotPower(power_output)
 ```
 
-**Note**: multiplotPower automatically saves the plot to the current working directory and you can view it by opening the accordning png-file.
+**Note**: multiplotPower automatically saves the plot to the current working directory and you can view it by opening the according PNG-file.
 
 ![](/Users/leah/Dropbox/Power/notebooks/multiplot_powerSimulation.png)
 
@@ -290,13 +286,14 @@ multiplotPower(power_output)
 
 &nbsp;
 
-A separate graph for each effect in the model output is plotted. In the current example, the data consisted of 48 participants, thus each power value at 48 corresponds to the actual sample size of the data used to inform the simulation. 
+A separate graph for each effect in the model output is plotted. In the current example, the data consisted of 48 participants, thus each power value at 48 corresponds to the actual sample size of the data used to inform the simulation.
 
-Let's first have a look at morphological complexity (sn.c) as this is the effect we examined with simr as well. The databased estimate in mixedpower and simr provide very similar results for all examined sample sizes. However, the safeguard estimate results in more conservative results than the confidence interval provided by simr (at least with the confidence level used for the present example). Also, it is worth mentioning that runtime for the mixedpower simulation was 14 minutes compared to over 60 hours for simr. 
+Let's first have a look at morphological complexity (sn.c) as this is the effect we examined with simr as well. The databased estimate in mixedpower and simr provide very similar results for all examined sample sizes. However, the safeguard estimate results in more conservative results than the confidence interval provided by simr (at least with the confidence level used for the present example).
+The runtime for the mixedpower simulation was only 14 minutes.
 
 The remaining effect of word length (wf.c) and launch site (ls.c) as well as their interaction (wf.c:ls.c) had a power of 100% for both the databased and safeguard estimate and all examined sample sizes. The interaction of word length and number of suffixes (wl.c:sn.c) had a power ranging from 94 - 100% (safeguard:80 - 99 %).
 
-Moreover, the interactions ls.c:sn.c and wl.c:ls.c:sn.c seem to have very similar results for the databased and safeguard estimate, both not exceeding 25%. Because sagfeguard power only is available for significant effects in the model used for simulation (FLPmodel), safeguard was not effectively used for here. For more a more detailed explanation for this see the [general introduction](https://lkumle.github.io/power_notebooks/mixedpower_introduction.html) for mixedpower. 
+Moreover, the interactions ls.c:sn.c and wl.c:ls.c:sn.c seem to have very similar results for the databased and safeguard estimate, both not exceeding 25%. Because sagfeguard power only is available for significant effects in the model used for simulation (FLPmodel), safeguard was not effectively used for here. For more a more detailed explanation for this see the [general introduction](https://lkumle.github.io/power_notebooks/mixedpower_introduction.html) for mixedpower.
 
 &nbsp;
 
@@ -307,7 +304,7 @@ Using the output of a power analysis to decide on the necessary sample size requ
 Second, especially when working with mixedpower, we need to decide on which estimate (databased or safeguard) our decision should be based on and which effects are taken into consideration. As the current simulation was based on published data that are likely to be subject to publication bias, using corrected effect size estimates seems reasonable.
 Since mixedpower provides power estimates for all effects specified in the model, we need to agree on a strategy on how to combine this information. In doing so, different scenarios come to mind depending on how many effects are of interest. On general, the effect with lowest power should be picked to decide on a sample size for the following study. This makes sure that all effects are adequately powered.
 
-Imagine we are interested in the effects of *world length* (wl.c) and *morphological complexity* (sn.c): As morphological complexity shows lower power values in our simulation, we will use it to decide on a sample size. The databased estimate suggests a sample size of around 40 participants. However, using the safeguard estimate this would not result in adequate power and we would further increase our sample size. 
+Imagine we are interested in the effects of *world length* (wl.c) and *morphological complexity* (sn.c): As morphological complexity shows lower power values in our simulation, we will use it to decide on a sample size. The databased estimate suggests a sample size of around 40 participants. However, using the safeguard estimate this would not result in adequate power and we would need to further increase our sample size.
 
 
 
@@ -318,7 +315,7 @@ Imagine we are interested in the effects of *world length* (wl.c) and *morpholog
 
 ###**References**
 
-Bates, D., Maechler, M., Bolker, B., & Walker, S. (2014). Fitting Linear Mixed-Effects Models using lme4. Journal of Staistical Software, 67(1). https://doi.org/10.18637/jss.v067.i01
+Bates, D., Maechler, M., Bolker, B., & Walker, S. (2014). Fitting Linear Mixed-Effects Models using lme4. Journal of Statistical Software, 67(1). https://doi.org/10.18637/jss.v067.i01
 
 Brysbaert, M., & Stevens, M. (2018). Power Analysis and Effect Size in Mixed Effects Models: A Tutorial. Journal of Cognition, 1(1), 1???20. https://doi.org/10.5334/joc.10
 
