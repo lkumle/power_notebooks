@@ -1,0 +1,244 @@
+---
+title: 'Scenario 2: Simulating different units and possible combinations'
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+Kumle, L., Vo, M. L-H., & Draschkow, D.
+
+latest update: March 2020
+
+&nbsp;
+
+This Notebook aims at accompanying Scenario 2 in Kumle, Vo & Draschkow (in preparation).  
+
+For a general introduction to simulation-based power analyses as well as using simulations to explore power for different sample sizes, see [Notebook 1](https://lkumle.github.io/power_notebooks/Scenario1_notebook.html). 
+
+In this Noteboook, we will cover situations in which we wish to simulate power for random effects other than subject. To do so, the packages [*mixedpower* ](https://github.com/DejanDraschkow/mixedpower) (Kumle, Vo & Draschkow, 2018) and [*simr*](https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.12504) (Green & Macleod, 2016) are used and all simulations are based on (generalized) mixed models fitted with [*lme4*](https://arxiv.org/pdf/1406.5823.pdf) (Bates, Maechler, Bolker & Walker, 2015). All simulations shown in this Notebook are applicable for linear mixed models as well as generalized linear mixed models. 
+
+See [Notebook 3](https://lkumle.github.io/power_notebooks/Scenario3_notebook.html) for starting a simulation-based power estimation from scratch.   
+&nbsp;
+
+***
+***
+
+### Import Data
+
+As in [Notebook 1](https://lkumle.github.io/power_notebooks/Scenario1_notebook.html), we will base our simulation on data published by Yan, Zhou, Shu, Yusupu, Miao, Kruegel & Kliegl (2014) retrieved from http://read.psych.uni-potsdam.de. A preprocessed data set can be downloaded [here](https://www.dropbox.com/s/ply8xkg123d4ee0/Yan_et_al.RData?dl=0). 
+
+```{r include = F}
+# get data
+load("~/Dropbox/Power/manuscript/BRM/analyses_BRM/Yan_et_al.RData") # data set is called "YanData"
+data["word_length"] <- data$wl.c
+data["complexity"] <- data$sn.c
+data["subject"] <- data$nsub
+data["sentence"] <- data$nsen
+YanData <- data
+```
+
+```{r eval = F}
+# get data
+load("Yan_et_al.RData") # data set is called "YanData"
+```
+&nbsp;  
+
+Yan et all. (2014) tested 48 subjects, each of whom read 120 sentences investigating the effect of different factors on the first landing position while reading (FLP, i.e. the position in a sentence your eyes first land on) - a more detailed introduction to the data set can be found in the general tutorial and Notebook 1 where we varied the number of subjects to explore the effect on power. The levels of the second random parameter (i.e. stimuli/items), however, have been kept constant even though it is of course possible to also change the levels of the second random effect.
+
+&nbsp;  
+
+Again, we are interested in the effect of morphological complexity (i.e. sumber of suffixes) and word length and therefore will include them as fixed effects in our model fitted with *lme4*:
+```{r message=FALSE, warning=FALSE}
+library(lme4)
+#  LMM including word length and word compleity as fixed effects and random intercepts for subject and sentence
+FLPmodel <- lmer(flp ~ word_length * complexity + (1|subject) + (1|sentence),
+                 data = YanData)
+
+summary(FLPmodel, corr = F) # let's have a look!
+```
+
+The corresponding FLPmodel includes word length ( ß = 1.511) and morphological complexity (ß = - 0.075) as well as their interaction (ß = 0.116) as fixed effects (see Table 1). Moreover, we included random intercepts for the random effects of subjects and sentence (i.e. stimuli) making this model a typical example with crossed random effects as described by Baayen et al. (2008).  
+
+***
+***
+### Varying the number of stimuli 
+
+This time, we are not interested in changing the number of subjects but the number of sentences around the original number of 120.  
+&nbsp;  
+
+#### **mixedpower**
+Using the mixedpower package, all that has to be changed conpared to Scenario 1 is the specification of **simvar** and its **steps**. However, in the following we will again specify all parameters before running the actual power analysis.
+
+
+```{r eval=FALSE}
+# install mixedpower
+if (!require("devtools")) {
+    install.packages("devtools", dependencies = TRUE)}
+devtools::install_github("DejanDraschkow/mixedpower") # mixedpower is hosted on GitHub
+
+# load library 
+library(mixedpower)
+```
+&nbsp;   
+
+First, we will provide some general information about the LMM we want to simulate power for to set the foundation for the power simulation about to be performed. Note how we specified "sentence" as the random effect we want to vary. 
+```{r eval=FALSE}
+
+# ------------------------------------------ #
+# INFORMATION ABOUT MODEL USED FOR SIMULATION
+
+model <- FLPmodel # which model do we want to simulate power for?
+data <- YanData # data used to fit the model 
+fixed_effects <- c("word_length", "complexity") # all fixed effects specified in FLPmodel
+simvar <- "sentence" # which random effect do we want to vary in the simulation? 
+
+```
+&nbsp;  
+
+Next, we will set the parameters determining the details of our simulation. As the original data set contains 120 sentences, we will explore power for a range of sentences around that number.  
+Similar to Scenario 1, we will include the SESOI (i.e. smallest effect of interest) simulation.  An introduction to the SESOI can be found in Notebook 1 and the tutorial paper (Kumle, Vo & Draschkow, in preparation). 
+```{r eval=FALSE}
+
+# ------------------------------------------ #
+# SIMULATION PARAMETERS
+steps <- c(100, 120, 140, 160, 180) # which sample sizes do we want to look at? 
+critical_value <- 2 # which t/z value do we want to use to test for significance? 
+n_sim <- 1000 # how many single simulations should be used to estimate power? 
+
+# ------------------------------------------ #
+# INCLUDE SESOI SIMULATION
+SESOI <- c(3.66, 0.75, -0.065, 0.09) # specify SESOI
+```
+&nbsp;  
+
+Finally, we will combine all those information in the mixedpower()-function and run the power analysis. Depending on the complexity and size of the model and data as well as on the number of cores on the machine used for simulation … time to take a short break! Running on a machine with 6 cores, the following simulation will take approximatly 10-15 minutes. 
+```{r eval=FALSE}
+
+# ------------------------------------------ #
+# RUN SIMULATION
+power_sentences <- mixedpower(model = FLPmodel, data = YanData,
+                              fixed_effects = c("word_length", "complexity"),
+                              simvar = "subject", steps = c(100, 120, 140, 160, 180),
+                              critical_value = 2, n_sim = 1000, 
+                              SESOI = SESOI, databased = T)
+
+```
+&nbsp;   
+```{r include=FALSE}
+# load output in the background
+load("~/Dropbox/Power/manuscript/BRM/analyses_BRM/Scenario 2/R2_scenario2_48subjects_new.Rdata")
+power_sentences <- power48_sentences
+```
+
+Let's have a look at the results and plot them: 
+```{r}
+# let's have a first look at the results: 
+power_sentences
+```
+
+```{r eval=FALSE}
+
+# ------------------------------------------ #
+# PLOT RESULTS
+multiplotPower(power_sentences)
+
+```
+
+![](/Users/leah/Dropbox/Power/manuscript/BRM/analyses_BRM/Scenario 2/mixedpower_S2.png)
+
+&nbsp; 
+&nbsp; 
+
+***
+
+#### **simr**  
+
+The same analyses can be done with the [*simr*](https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.12504) package (Green & Macleod, 2016) - with the difference that we have to test one effect at a time. Similar to the analysis with mixedpower, we just specify “sentence” as the variable we want to simulate *along* and extend the model along this random effect first. 
+
+```{r eval=FALSE}
+library(simr)
+library(simr)
+# -------------------------------------------- #
+# EXTEND DATA SET 
+FLPmodel_extended <- extend(FLPmodel, along="sentence", n = 180) #extend data set to include 180 sentences
+
+# -------------------------------------------- #
+# POWER ANALYSIS WITH SIMR
+powerC_sentences <- powerCurve(fit = FLPmodel_extended, test = fixed("complexity"), along = "sentence",
+                               breaks = c(100, 120, 140, 160, 180)) 
+```
+
+A more detailed tutorial for simr can be found [here](https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.12504) and the inclusion of the simr package in this Notebook simply aims at introducing the package to give a more complete overview of existing resources. 
+
+***
+***
+### Varying the levels multiple random effects simultaneously
+
+So far, we only varied the levels of one random effect while we kept the other one constant. However, being able to vary both simultaneously would be desirable as it allows to estimate power for different combinations of random effect levels.
+
+To do so, we will make use of the **R2power()-function** in mixedpower which allows to do exactly that (check ?R2power or the [documentation](https://lkumle.github.io/power_notebooks/intro/Introduction_to_mixedpower.pdf) of mixedpower for more details). 
+The principle behind the simulations in R2power stays the same as in the other approaches in mixedpower introduced earlier. First, new data sets are simulated before they are used to refit the model entered into the simulation. Second, all fixed effects (and interactions) in the refitted models are checked for significance before power is estimated as the proportion of significant to all simulation.   
+However, the simulation of new data sets now follows a two-step simulation process where the levels of one random effect are simulated before the levels of the second random effect are adapted. To do so, we need to specify the desired levels and names of  *both* random effects. 
+
+Imagine wanting to explore power for a range of sentences - but not for 48 subjects like in the data published by Yan et al. (2014) but for 30 subjects. Consequentially, we would keep sentences as our “simvar” and add subject as the second varying random effect. All other parameters will stay the same as in the simulation run with mixedpower() above. 
+
+```{r eval=FALSE}
+# ------------------------------------------ #
+# SPECIFY R2 PARAMETERS
+R2var <- "subject" # specify "subject" as the second random effect we want to vary
+R2level <- 30 # which level should "subject" have? 
+
+# ------------------------------------------ #
+# RUN SIMULATION
+R2power <- R2power(model = FLPmodel, data = YanData,
+                   fixed_effects = c("word_length", "complexity"),
+                   simvar = "sentence", steps = c(100,120,140,160,180),
+                   R2var = "subject", R2level = 30,  critical_value = 2, 
+                   n_sim = 1000, SESOI = SESOI, databased = T)
+
+```
+
+```{r include=FALSE}
+# load output in the background
+ load("~/Dropbox/Power/manuscript/BRM/analyses_BRM/Scenario 2/R2power_Notebook2.Rdata")
+R2power <- R2power_Notebook2
+```
+
+```{r}
+# let's have a look at the results
+R2power
+```
+
+```{r eval=FALSE}
+# ------------------------------------------ #
+# PLOT RESULTS
+multiplotPower(R2power)
+```
+
+![](/Users/leah/Dropbox/Power/manuscript/BRM/analyses_BRM/Scenario 2/R2power_Notebook.png)
+&nbsp;  
+
+ 
+Finally, we need to transfer the plots and results into a decision regarding the research design of our planned study. General guidance can be found in the accompanying tutorial paper. In this Notebook, we will adapt a strategy resulting in > 80% power for all effects included in the model. To reach this threshold, we could either test 48 subjects each of whom reads 160 sentences. In a scenario where we only have resources for 30 subjects even 180 sentences would not be enough to power our study with > 80% power for all effects if we base our decision on the SESOI effect (as can be seen in the results of the R2power simulation). Moreover, we could run more simulations for even more combinations and base our decision on them. Repeating this process with different combinations (e.g. different R2levels) enables an extensive overview of power and the factors that influence it, which can be especially useful in cases in which one of the random effects cannot be increased, i.e. a ceiling on the amount of participants or stimuli.
+
+***
+***
+Continue with [Notebook 3](https://lkumle.github.io/power_notebooks/Scenario3_notebook.html) for starting a simulation-based power estimation from scratch.   
+
+***
+***
+
+
+### References 
+Bates, D., Maechler, M., Bolker, B., & Walker, S. (2014). Fitting Linear Mixed-Effects Models using lme4. Journal of Statistical Software, 67(1). https://doi.org/10.18637/jss.v067.i01
+
+Green, P., & Macleod, C. J. (2016). SIMR: An R package for power analysis of generalized linear mixed models by simulation. Methods in Ecology and Evolution, 7(4), 493-498. [https://doi.org/10.1111/2041-210X.12504](https://doi.org/10.1111/2041-210X.12504)
+
+Kumle, L., Vo, M. L-H., & Draschkow, D. (2018). Mixedpower: a library for
+estimating simulation-based power for mixed models in R. https://doi.org/10.5281/zenodo.1341047
+
+Kumle, L., Vo, M. L-H., & Draschkow, D. (in preparation). Estimating power in linear and generalized linear mixed models: an open introduction and tutorial in R.
+
+Yan, M., Zhou, W., Shu, H., Yusupu, R., Miao, D., Kruegel, A., & Kliegl, R. (2014). Eye movements guided by morphological structure: Evidence from the Uighur language. Cognition, 132(2), 181???215. https://doi.org/10.1016/j.cognition.2014.03.008
+
+***
