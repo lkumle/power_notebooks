@@ -7,7 +7,7 @@ last update: March 2020
 ***
 
 
-The following Notebooks aim at accompanying the Scenarios in Kumle, Vo & Draschkow (in preparation) - detailed theoretical background concerning the analyses can be found there. Besides the analyses mentioned in the main tutorial, the Notebooks contain additional information and tools. 
+The following Notebooks aim at accompanying the Scenarios in Kumle, Vo & Draschkow (in preparation) - detailed theoretical background concerning the analyses can be found there. Besides the analyses mentioned in the main tutorial, the Notebooks contain additional information and tools to perform simulation based power analyses. 
 
 #### Link to all Notebooks:  https://lkumle.github.io/power_notebooks/
 
