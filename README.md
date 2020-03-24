@@ -9,7 +9,7 @@ last update: March 2020
 
 The following Notebooks aim at accompanying the Scenarios in Kumle, Vo & Draschkow (in preparation) - detailed theoretical background concerning the analyses can be found there. Besides the analyses mentioned in the main tutorial, the Notebooks contain additional information and tools to perform simulation based power analyses. 
 
-#### Link to all Notebooks:  https://lkumle.github.io/power_notebooks/
+### Link to all Notebooks:  https://lkumle.github.io/power_notebooks/
 
 **Scenario 1:** [Using an available well-powered design as a starting point
 ](https://lkumle.github.io/power_notebooks/Scenario1_notebook.html)
@@ -19,7 +19,7 @@ The following Notebooks aim at accompanying the Scenarios in Kumle, Vo & Draschk
 **Scenario 3:** [Having strong and detailed a priori assumptions](https://lkumle.github.io/power_notebooks/Scenario3_notebook.html)
 
 
-#### mixedpower package
+### mixedpower package
 
 **Dokumentation:** https://lkumle.github.io/power_notebooks/intro/Introduction_to_mixedpower.pdf
 
