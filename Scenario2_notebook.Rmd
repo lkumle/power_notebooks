@@ -15,7 +15,7 @@ This notebook accompanies Scenario 2 in Kumle, Vo & Draschkow (in preparation).
 
 For a general introduction to simulation-based power analyses as well as using simulations to explore power for different sample sizes, see [Scenario 1](https://lkumle.github.io/power_notebooks/Scenario1_notebook.html).
 
-In this notebook, we will cover scenarios in which we wish to simulate power for random effects other than subject. To do so, the packages [*mixedpower* ](https://github.com/DejanDraschkow/mixedpower) (Kumle, Vo & Draschkow, 2018) and [*simr*](https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.12504) (Green & Macleod, 2016) are used and all simulations are based on (generalized) mixed models fitted with [*lme4*](https://arxiv.org/pdf/1406.5823.pdf) (Bates, Maechler, Bolker & Walker, 2015). All simulations shown in this notebook are applicable for linear mixed models as well as generalized linear mixed models.
+In this notebook, we will cover scenarios in which we wish to simulate power for random variables other than subject. To do so, the packages [*mixedpower* ](https://github.com/DejanDraschkow/mixedpower) (Kumle, Vo & Draschkow, 2018) and [*simr*](https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.12504) (Green & Macleod, 2016) are used and all simulations are based on (generalized) mixed models fitted with [*lme4*](https://arxiv.org/pdf/1406.5823.pdf) (Bates, Maechler, Bolker & Walker, 2015). All simulations shown in this notebook are applicable for linear mixed models as well as generalized linear mixed models.
 
 See [Scenario 3](https://lkumle.github.io/power_notebooks/Scenario3_notebook.html) for starting a simulation-based power estimation from scratch.   
 &nbsp;
@@ -81,7 +81,7 @@ library(mixedpower)
 ```
 &nbsp;   
 
-First, we will provide some general information about the model we have chosen to simulate power for. Note how we specified "sentence" as the random effect we want to vary.
+First, we will provide some general information about the model we have chosen to simulate power for. Note how we specified "sentence" as the random variable we want to vary.
 ```{r eval=FALSE}
 
 # ------------------------------------------ #
@@ -90,7 +90,7 @@ First, we will provide some general information about the model we have chosen t
 model <- FLPmodel # which model do we want to simulate power for?
 data <- YanData # data used to fit the model
 fixed_effects <- c("word_length", "complexity") # all fixed effects specified in FLPmodel
-simvar <- "sentence" # which random effect do we want to vary in the simulation?
+simvar <- "sentence" # which random variable do we want to vary in the simulation?
 
 ```
 &nbsp;  
@@ -128,7 +128,7 @@ power_sentences <- mixedpower(model = FLPmodel, data = YanData,
 &nbsp;   
 ```{r include=FALSE}
 # load output in the background
-load("~/Dropbox/Power/manuscript/BRM/analyses_BRM/Scenario 2/R2_scenario2_48subjects_new.Rdata")
+load("~/Dropbox/Power/manuscript/BRM/analyses_BRM/Scenario 2/R2_scenario2_48subjects.Rdata")
 power_sentences <- power48_sentences
 ```
 
@@ -174,15 +174,15 @@ A more detailed tutorial for simr can be found [here](https://besjournals.online
 
 ***
 ***
-### Varying the levels multiple random effects simultaneously
+### Varying the levels multiple random variables simultaneously
 
-So far, we only varied the levels of one random effect while we kept the other one constant. However, being able to vary both simultaneously would be desirable as it allows to estimate power for different combinations of random effect levels.
+So far, we only varied the levels of one random variable while we kept the other one constant. However, being able to vary both simultaneously would be desirable as it allows to estimate power for different combinations of levels.
 
 To do so, we will make use of the **R2power()-function** in mixedpower which allows to do exactly that (check ?R2power or the [documentation](https://lkumle.github.io/power_notebooks/intro/Introduction_to_mixedpower.pdf) of mixedpower for more details).
 The principle behind the simulations in R2power stays the same as in the other approaches in mixedpower introduced earlier. First, new data sets are simulated before they are used to refit the model entered into the simulation. Second, all fixed effects (and interactions) in the refitted models are checked for significance before power is estimated as the proportion of significant to all simulation.   
-However, the simulation of new data sets now follows a two-step simulation process where the levels of one random effect are simulated before the levels of the second random effect are adapted. To do so, we need to specify the desired levels and names of *both* random effects.
+However, the simulation of new data sets now follows a two-step simulation process where the levels of one random variable are simulated before the levels of the second random variable are adapted. To do so, we need to specify the desired levels and names of *both* random variables.
 
-Imagine wanting to explore power for a range of sentences - but not for 48 subjects like in the data published by Yan et al. (2014) but for 30 subjects. Consequentially, we would keep sentences as our “simvar” and add subject as the second varying random effect. All other parameters will stay the same as in the simulation run with mixedpower() above.
+Imagine wanting to explore power for a range of sentences - but not for 48 subjects like in the data published by Yan et al. (2014) but for 30 subjects. Consequentially, we would keep sentences as our “simvar” and add subject as the second varying random variable. All other parameters will stay the same as in the simulation run with mixedpower() above.
 
 ```{r eval=FALSE}
 # ------------------------------------------ #
