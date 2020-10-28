@@ -18,6 +18,8 @@ The following Notebooks aim at accompanying the Scenarios in Kumle, Vo & Draschk
 
 **Scenario 3:** [Having strong and detailed a priori assumptions](https://lkumle.github.io/power_notebooks/Scenario3_notebook.html)
 
+**Supplementary Notebook:** [Benchmarking mixedpower](https://lkumle.github.io/power_notebooks/Supplementary_notebook.html)
+
 
 ### mixedpower package
 
