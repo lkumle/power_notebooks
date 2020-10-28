@@ -1,0 +1,250 @@
+---
+title: "Supplementary Material"
+output: html_notebook
+---
+
+Kumle, L., Vo, M. L-H., & Draschkow, D., latest update: October 2020
+
+Supplementary material for "Estimating power in (generalized) mixed models: an open introduction and tutorial in R."
+
+&nbsp;
+
+
+### **Benchmarking the mixedpower package**
+
+The following Supplementary Notebook aims at establishing the performance and accuracy of the newly introduced [mixedpower package](https://github.com/DejanDraschkow/mixedpower) (Kumle, Vo & Draschkow, 2018). Covering two data sets and a range of different power analyses, we will compare the results computed with mixedpower with ones obtained with the [simr](https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.12504) package (Green & Macleod, 2016). 
+
+
+Both data sets and power analyses approaches in the present notebook are inspired by the tutorial paper by [Brysbaert & Stevens (2018)](https://doi.org/10.5334/joc.10).   
+
+Data and analyses from Brysbaert & Stevens (2018) were retrieved from https://osf.io/5v7tc/. A complete implementation of all simulations featured in this Supplementary Notebook can be found at [LINK GITHUb REPO]. 
+
+
+```{r eval = FALSE}
+# prepare
+library(lme4)
+library(mixedpower)
+library(simr)
+```
+
+&nbsp;  
+
+#### **Replicating power of Adelman et a. (2014)**
+
+In their tutorial, Brysbaert & Stevens (2018) report power values for a study conducted by Adelman et al. (2014). See below an implementation of the linear mixed model used in their analysis: 
+
+```{r eval = FALSE}
+## fit mode (use numeric sub and item identifier)
+full_model <- lmer(RT ~ prime + (prime|itemID) + (prime|subID), data=adelman2)
+```
+
+&nbsp;  
+
+##### Testing mixedpower()-function
+
+Using the powerSim()-function included in simr, Brysbaert & Stevens (2018) estimate power for different sub-samples of the Adelman et al. (2014) data (i.e. different numbers of subjects responding to different numbers of items). 
+  
+Here, they randomly sample different subjects and items from the full data set and estimate power for this subsample. This process is then repeated 100 times and power is averaged over different subsamples to generalise to power for certain number of subjects/items. Brysbaert & Stevens (2018) report the results in Table 4 of their paper and all power estimates for simr in this notebook are adopted from there.   
+
+
+We first replicated the results using the **mixedpower() - function** in the mixedpower package. Similar to the simulation with powerSim(), we randomly sample different numbers of items, repeat this process 100 times and average the results to generalise to the number of items. However, as the mixedpower()- function allows to change the number of levels in one random variable, we chose to change the number of subjects **inside** the simulation.    
+ 
+This comes with the advantage that simulations do not depend on the specific sampled subjects and are instead based on the information of **all** subjects. Below is an implementation of this process for 40 subjects and 40 items.   
+The same approach will then be repeated for 80 subjects/60 items and 20 subjects/120 items and compared with the corresponding results reported in Table 4 in Brysbaert & Stevens (2018). 
+```{r eval = FALSE}
+### A: sample 40 random subjects and 40 random stimuli. repeat 100 times and average
+
+itm <- unique(adelman2$itemID)
+
+pow <- list()
+for (i in 1:100) {
+
+  # randomly select  items & refit model
+  selectionitem <- sample(itm,40)
+  adelman3 <- adelman2[which(adelman2$itemID %in% selectionitem), ]
+
+  sub_model <- lmer(RT ~ prime + (prime|itemID) + (prime|subID),
+                    data=adelman3)
+
+  # power analysis: include 40 subjects (steps = 40)
+  power  <- mixedpower(model = full_model, data = adelman2,
+                      fixed_effects = c("prime"),
+                      simvar = "subID", steps = c(40),
+                      critical_value = 2, n_sim = 100,
+                      SESOI = F, databased = T)
+
+  pow[i] <- power[1,1]
+
+}
+p <- unlist(pow)
+
+# get mean power for 40 subjects/40 participants
+power <- mean(p)
+```
+&nbsp;  
+
+__Comparison of results __
+
+![](/Users/leah/Dropbox/Power/manuscript/BRM/Reviews/benchmarking/table_1.png)
+
+_Table 1_. Replication of Table 4 in Brysbaert & Stephens (2018) with power estimates obtained by mixedpower().
+
+&nbsp; 
+
+##### Testing R2power() 
+
+
+Next, we aim to replicate all results reported in Table 4 Brysbaert & Stevens (2018). Here, we will be using the **R2power()-function** included in the mixedpower package. R2power() allows to simultaneously change the levels of two random variables (i.e., subject and item) *inside* the simulation. Therefore, no sub-sampling and averaging over different samples is necessary and the simulations will be informed by model parameters based on the information of all subjects and items included in the Adelman et al. (2014) data.   
+
+
+The according implementation replicating the first row of Table 4 (different sample sizes reacting to 20 items) can be seen below. 
+
+```{r eval = FALSE}
+# Using r2power() to estimate power for 20 items and different sample sizes
+power_20items <- R2power(model = full_model, data = adelman2,
+                         fixed_effects = c("prime"),
+                         simvar = "subID", steps = c(20,40,60,80,100,120,1020), # all sample sizes
+                         R2var = "itemID", R2level = c(20),   #20 items
+                         critical_value = 2,  n_sim = 1000,
+                         SESOI = F, databased = T)
+```
+
+&nbsp; 
+
+__Comparison of results __
+
+
+![](/Users/leah/Dropbox/Power/manuscript/BRM/Reviews/benchmarking/table_2.png)
+
+_Table 2_. Replication of Table 4 in Brysbaert & Stephens (2018) with power estimates obtained by R2power(). 
+
+&nbsp; 
+
+##### Sources of variations 
+
+Comparing the results in Table 4 of Brysbaert & Stevens (2018) to the results obtained with mixedpower() and R2power (Table 1 and 2 in this notebook) reveals slight differences with differences becoming larger for overall higher power. Here, different sources of variation need to be highlighted. 
+
+First, small differences are to be expected even if the exact same simulation is repeated (see Figure 6 in the main tutorial).
+  
+Second, the variation between repeated simulations increases the less repetitions (i.e. single simulations) are included in the simulation process. As noted before, results in Table 4 in Brysbaert & Stevens (2018) are obtained averaging power for 100 different subsamples of the Adelman et al. (2014) data set. Here, power for each subsample is based on 20 repetitions in powerSim(). Power between different subsamples can therefore vary greatly (see Figure 1, left panel).    
+
+Given that power is restricted to the range of 0 - 100%, variability in these point estimates will have a larger effect when true power is low or high. For example, while most point estimates in Figure 1 (left panel) lie between 80 - 100%, the high variability between point estimates will lead to an average power below 80%. As can be seen in the implementation of the power analyses with the mixedpower()-function above, we included 100 repetitions in each of the 100 simulations. Through this, the variability between different point estimates is reduced (Figure 1, right panel).  
+
+
+![](/Users/leah/Dropbox/Power/manuscript/BRM/Reviews/benchmarking/hist_simr_mixedpower.png)
+_Figure 1_. Point estimates of simr (obtained with powerSim and n = 20 repetitions) and mixedpower (obtained with mixedpower() and n = 100 repetitions) for 60 subjects and 80 items. 
+
+&nbsp; 
+
+However, comparing the point estimates obtained with the mixedpower()-function and n = 20 repetitions (Figure 2, left) vs. n = 100 repetitions (Figure 2, right) reveals that while variability increases for less repetitions, it cannot alone account for the differences observed in Figure 1.   
+
+We believe this to be attributed to the subsampling process. While the results obtained with powerSim() in Table 4 of Brysbaert & Stevens (2018) are based on parameters informed through random subsamples of subjects **and** items, changing the number of subjects **inside** the simulation process of the mixedpower()- function reduces one source of variability. As noted before, parameters used to inform the simulations in mixedpower() are therefore based on **all** subjects and the randomly sampled items. Inferring from the model summary fitted to the full Adelman et al. (2014) data, variance between subjects is much higher than between items. Accordingly, reducing this source of variability while informing the parameters of the simulation should A) result in less variability between point estimates (Figure 1, right) and B) to a more accurate average power. 
+
+![](/Users/leah/Dropbox/Power/manuscript/BRM/Reviews/benchmarking/mixedpower_20_100_plot.png)
+
+
+_Figure 2_. Point estimates obtained with the mixedpower()-function for 60 subjects/80 items and n = 20 repetitions (left) vs. n = 100 repetitions (right). 
+
+
+The same logic applies to the comparison between R2power() (whose simulations are based on 1000 simulation each) and the averaged results obtained with simr. Since the R2power() is specifically designed to vary the levels of two random variables, no subsampling is needed. Consequentially, using the R2power()-function reduces another source of variability as the parameters used to inform the simulation are now based on **all** subjects and **all** items. We believe this to be the reason of the differences observed in Table 2. 
+
+
+&nbsp; 
+
+#### **Replicating power of Perea, Vergara-Martínez, and Gomez (2015)**
+
+As a second example, Brysbaert & Stevens (2018) report power for a study conducted by Perea et al. (2015) which includes 40 subjects who each responded to 120 items. Here, the authors investigated the effect of repetition priming and found a priming effect of 39 ms. Following the approach taken by Brysbaert & Stephens (2018), we report power of the  Perea et al. (2015) study for observing priming effects of different magnitudes. Here, the dependent variable invRT is manipulated in a way as if the observed priming effect was of a different size. We computed power for the same effect sizes using A) powerSim() included in simr and B) mixedpower(). Simulations with both functions included 1000 repetitions (nsim = 1000) and were based on the following model: 
+
+
+```{r eval = FALSE}
+## fit mode (use numeric sub and item identifier)
+fit2 <- lmer(invRT ~ REPETITION + (1|ITEM) + (REPETITION|SUBJECT), data=perea)
+```
+&nbsp; 
+
+##### Power for different effect sizes
+
+Seen below is the implementation of a power analysis for a 15 ms priming effect using mixedpower() and powerSim(). We then repeated this approach with priming effects of different sizes and report the results in Table 3.
+
+```{r eval = FALSE}
+# manipulate priming effect
+perea1 <- subset(perea, REPETITION=="unrelated")
+perea2 <- subset(perea, REPETITION=="repeated")
+perea2$RT = perea2$RT+25
+perea3 <-rbind(perea1,perea2)
+perea3$invRT <- -1000/perea3$RT
+
+fit <- lmer(invRT ~ REPETITION + (1|ITEM) + (REPETITION|SUBJECT), data=perea3) 
+
+# estimate power for 15 ms priming effect with mixedpower
+power_15ms  <- mixedpower(model = fit, data = perea3,
+                           fixed_effects = c("REPETITION"),
+                           simvar = "ITEM", steps = c(120),
+                           critical_value = 2, n_sim = 1000,
+                           SESOI = F, databased = T)
+
+# estimating power with simr (powerSim())
+power_15ms_simr <- powerSim(fit,nsim=1000)
+```
+&nbsp; 
+
+__Comparison of results __
+
+![](/Users/leah/Dropbox/Power/manuscript/BRM/Reviews/benchmarking/table_3.png)
+_Table 3_. Results for different effect sizes using the mixedpower() and powerSim(). ALl simulations are based on 1000 repetitions, 40 subjects and 120 items. 
+
+
+&nbsp;   
+
+##### Power for different sample sizes/ number of stimuli
+
+As can be seen, a priming effect of 15 ms still yielded around 90% power (for 40 subjects and 120 items). Next, we successively varied the number of subjects and items for the Perea et al. (2015) data set containing a 15 ms priming effect. Here, we compare the powerCurve()-function in simr and the mixedpower()-function in mixedpower. Both functions have been handed the same model and data and all simulations are based on 1000 repetitions. The results are depicted in Figure 3 which reveals that both powerCurve() and mixedpower() show comparable results. 
+
+```{r eval = FALSE}
+
+## POWER ANALYSIS WITH MIXEDPOWER
+# simulating power for different sample sizes 
+power_subs  <- mixedpower(model = fit, data = perea3,
+                         fixed_effects = c("REPETITION"),
+                         simvar = "SUBJECT", 
+                         steps = c(3,7,11,15,19,24,28,32,36,40), 
+                         critical_value = 2, n_sim = 1000,
+                         SESOI = F, databased = T)
+
+# simulating power for different number of stimuli 
+power_items  <- mixedpower(model = fit, data = perea3,
+                          fixed_effects = c("REPETITION"),
+                          simvar = "ITEM", 
+                          steps = c(3,16,29,42,55,68,81,94,107,120),
+                          critical_value = 2, n_sim = 1000,
+                          SESOI = F, databased = T)
+
+## POWER ANALYSIS WITH SIMR
+power_itm <- powerCurve(fit, along = "ITEM", nsim = 1000) # power for different number of stimuli
+power_sub <- powerCurve(fit, along = "SUBJECT", nsim = 1000) # power for different sample sizes
+```
+&nbsp; 
+
+__Comparison of results __
+
+![](/Users/leah/Dropbox/Power/manuscript/BRM/Reviews/benchmarking/2_perea_data/perea_main_plot.png)
+_Figure 3_. Power for the Perea et al. (2015) data set with a 15 ms priming effect using powerCurve() and mixedpower(). 
+
+
+
+
+***
+***
+
+#### References    
+
+Adelman, J. S., Johnson, R. L., McCormick, S. F., McKague, M., Kinoshita, S., Bowers, J. S., et al. (2014). A behavioral database for masked form priming. Behavior Research Methods, 46(4), 1052–1067. DOI: [https://doi.org/10.3758/s13428-013-0442-y](https://doi.org/10.3758/s13428-013-0442-y)
+
+Brysbaert, M., & Stevens, M. (2018). Power Analysis and Effect Size in Mixed Effects Models: A Tutorial. Journal of Cognition, 1(1). [https://doi.org/10.5334/joc.10](https://doi.org/10.5334/joc.10)
+
+Green, P., & Macleod, C. J. (2016). SIMR: An R package for power analysis of generalized linear mixed models by simulation. Methods in Ecology and Evolution, 7(4), 493-498. [https://doi.org/10.1111/2041-210X.12504](https://doi.org/10.1111/2041-210X.12504)
+
+Kumle, L., Vo, M. L-H., & Draschkow, D. (2018). Mixedpower: a library for
+estimating simulation-based power for mixed models in R. [https://doi.org/10.5281/zenodo.1341047](https://doi.org/10.5281/zenodo.1341047)
+
+Perea, M., Vergara-Martinez, M., & Gomez, P. (2015). Resolving the locus of case alternation effects in visual word recognition: Evidence from masked priming. Cognition, 142, 39–43. DOI: [https://doi. org/10.1016/j.cognition.2015.05.007](https://doi. org/10.1016/j.cognition.2015.05.007)
