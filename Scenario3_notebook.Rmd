@@ -1,0 +1,372 @@
+---
+title: 'Scenario 3: Having strong and detailed a priori assumptions'
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+Kumle, L., Vo, M. L-H., & Draschkow, D.
+
+latest update: November 2020
+
+***
+
+
+
+This notebook supplements Scenario 3 in Kumle, Vo & Draschkow (in preparation) where detailed theoretical background concerning the analyses can be found.
+
+
+For a general introduction to simulation-based power analyses as well as using simulations to explore power for different sample sizes, see [Scenario 1](https://lkumle.github.io/power_notebooks/Scenario1_notebook.html). Simulations focusing on exploring power for different number of stimuli or combinations of stimuli and subjects can be found in [Scenario 2](https://lkumle.github.io/power_notebooks/Scenario2_notebook.html).
+
+***
+
+
+Simulation-based power analyses for (generalized) linear mixed models typically require a fitted model to inform the simulation. To fit a model, however, we need appropriate data that inform the model parameters. The simulations in Scenario 1 and 2 always made use of already existing data - but what if appropriate data is not available from previous research?
+
+In the following notebook, we will focus on scenarios where no previous data exists or a researcher already has substantiated expectations of effect sizes, data and model structure. In such cases, it is possible to build data and model from scratch to bypass the lack of appropriate existing data. To do so, we will make use of the [*simr*](https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.12504) package (Green & Macleod, 2016) as well as the [*mixedpower* ](https://github.com/DejanDraschkow/mixedpower) package (Kumle, Vo & Draschkow, 2018).
+
+This approach comes with a range of theoretical concerns which can be found in the accompanying tutorial (Kumle, Vo & Draschkow, in preparation). We strongly recommend getting familiar with those concerns as well as how they effect the power of the resulting design.
+
+***
+***
+
+### A hypothetical study
+
+For the sake of this tutorial, let’s assume researchers are planning to investigate the effect of native language (English vs. non-English) in a lexical decision task where participants are asked to decide if displayed letter strings form an English word or are non-words.
+
+In particular, they are interested in the answering the following two questions:
+
+Are native English speakers more accurate in the lexical decision task?
+Are native English speakers faster in categorizing words vs. non-words?
+
+Additionally, they are interested if word frequency (i.e. how often a word appears in the English language) has an impact on the effect of native language.
+
+Accordingly, they plan to analyze their data with both a generalized linear mixed model (to answer question no. 1) and a linear mixed model (to answer question no. 2). Both models are supposed to include native language and word frequency as fixed effects as well as including intercepts for subject and stimuli (i.e. word) as random effects. The formula for the generalized linear model therefore will be:
+
+```{r}
+# formula for artificial model
+formula <- Correct ~ NativeLanguage * Frequency + (1 | Subject) + (1 | Word)
+```
+
+
+
+### Creating artificial data
+
+Before we can think about building a model from scratch, we need to create artificial data containing all relevant variables and covariates.
+
+
+&nbsp;  
+
+##### **Justifying parameters**
+Given the complicated nature of power analysis in (G)LMMs and the amount of associated parameters discussed earlier, creating artificial data requires substantial information regarding the expected data and model structure. For the ease of interpretation, the example we will use here is informed through the lexdec data set in the language R package (Baayen, 2007) and all parameters are therefore justified through this context.
+
+First, we will have a look at the lexdec data as we will use its parameters for justifying the parameters of the artificial data we will generate.  
+
+```{r include=FALSE}
+library(languageR)
+data <- lexdec
+
+data <- data[,c("Subject", "Word", "NativeLanguage", "Correct", "Frequency")]
+
+lexdec<- data
+head(lexdec)
+```
+
+Next, we will fit and evaluate a model which will be identical to the model we will want to estimate power for.
+
+
+```{r message=FALSE}
+library(lme4)
+# sum code native language
+lexdec$CenteredFrequency <- scale(data$Frequency, scale = F)
+modelY <- glmer(Correct ~ NativeLanguage * CenteredFrequency + (1 | Subject) + (1 | Word),
+               family = "binomial", data = lexdec)
+
+summary(modelY)
+```
+
+For clarity, you can return to the output of this "reference" model, whenever we select specific parameter values below.
+
+&nbsp;  
+
+
+##### **Random variables**
+
+From the formula of our hypothetical study, we can derive which variables we need to specify in our artificial data. Starting with the random effects, we need variables containing subject and stimuli identifier.
+
+```{r}
+# 1. create subject IDs  -> let's start with 20 subjects
+subject_ID <- (1:20)
+
+# 2. create stimuli IDS -> every subject should read 100 words
+stimuli_ID <- (1:100)
+```
+We can change these numbers in our power analysis later and will start with a data set containing 20 subjects each of whom reads 100 words.
+
+Using **expand.grid()**, we can create a data frame with all combinations of the supplied vectors.
+```{r}
+# 3. combine subject IDs and stimui IDs
+artificial_data <- expand.grid(Subject = subject_ID, Word = stimuli_ID)
+```
+&nbsp;  
+
+##### **Fixed effects**
+
+Next, we need to include the fixed effects *native language* and *frequency*.
+Let’s start with native language, which we agreed to have two levels (English vs. Non-English). We will code those two levels using the labels -0.5 for English speakers and 0.5 for Non-English speakers and will keep both groups balanced (i.e. including as many English speakers as Non-English speakers in our sample). Note, that unbalanced groups lead to reduced power (Kumle, Vo & Draschkow, in preparation) and should therefore be considered when planning sample size and recruitment.
+
+```{r}
+# 1. create vector including identifier for native language
+native_language <- c(rep(-0.5, 1000), rep(0.5, 1000))
+
+# --> we will have 10 subjects in every group, each of whom reads 100 words
+# --> the vector needs to contain 1000 "-0.5" and 1000 "0.5" entries
+
+# 2. add vector to data set
+artificial_data["NativeLanguage"] <- native_language
+```
+
+In a next step, we will generate frequency ratings for our second fixed effect. Since they will heavily influence our data structure, we need to be able to justify which frequency ratings we use. Ideally, we would already have actual frequency ratings on hand or know the frequencies’ distribution from which we can sample. In this example, we choose to sample from a normal distribution with a mean of 5 and standard deviation of 1. Afterwards, we will center the variable.
+
+```{r}
+#  1. generate frequency ratings
+frequency_ratings <- rnorm(100, mean = 5, sd = 1) # draw 100 frequency rating (one for every word)
+
+# 2. add to data frame
+artificial_data["Frequency"] <- rep(frequency_ratings, 20) # multiply by 20 (for every subject)
+artificial_data$CenteredFrequency <- scale(artificial_data$Frequency, scale = F)
+```
+
+Let's have a look at the resulting data frame:
+
+```{r echo=FALSE}
+head(artificial_data)
+```
+
+***
+***
+### Building a model from scratch
+
+&nbsp;  
+Now that we created an artificial data set, we can use it as the basis to create our model. However, as we do not have measures for our dependent variable *Correct*, we cannot simply use the *glmer() - function* in [*lme4*](https://arxiv.org/pdf/1406.5823.pdf) (Bates, Maechler, Bolker & Walker, 2015) to fit the model. Instead, we will make use of the **makeGlmer()** (and **makeLmer()**) function provided by the [*simr*](https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.12504) package (Green & Macleod, 2016).  
+
+```{r message=FALSE, warning=FALSE}
+library(simr)
+```
+
+Since we can’t actually fit the model to the structure of our data, we need to build the structure ourselves. This includes specifying values for the beta coefficients, variance of the random effects and the error variance (i.e. sigma). Deciding on those values represents the most important step in this scenario, since they will ultimately inform our subsequent simulation. Being able to justify them therefore is extremely important.
+
+First, we will specify values for our beta coefficients. This includes a value for the intercept as well as for all interactions included in a model. In our example, we therefore need to decide on a value for the intercept, the effects of *native language* and *frequency* as well as their interaction. To increase comprehensibility, we use values inspired by ```modelY```, which we ran in the beginning of this notebook.
+
+```{r}
+
+# ------------------------------------------ #
+# SPECIFY BETA COEFFICIENTS FOR FIXED EFFECTS
+fixed_effects <-  c(-4.3, 0.35, -0.4, -0.32) # order follows the order in model summary and formula
+```
+
+Second, we need to specify the variance of the random effects (i.e. subject and stimuli). Since we have more than one random effect, we need to provide them in a list - their order follows the order in the model formula specified earlier.
+
+```{r}
+
+# ------------------------------------------ #
+# SET RANDOM INTERCEPT VARIANCE
+random_variance <- list(1.04, 0.65)
+```
+&nbsp;  
+
+
+#### **Create Glmer**
+
+To create the desired generalized linear model (GLMM), we will make use of the **makeGlmer** function. Later, we will focus on the second question which requires a linear mixed model (LMM). All following steps regarding the power analysis are the same for LMMs and GLMMs  - being able to fit a GLMM vs. LMM  from scratch therefore is the only difference in this process.
+
+Since we already specified the beta coefficients and random effect variances earlier, we can simply hand all information to the *makeGlmer()* function. Note how we specified “binomial” as the model’s family.
+
+```{r}
+
+# ------------------------------------------ #
+# create GLMM
+artificial_glmer <- makeGlmer(formula = Correct ~ NativeLanguage * CenteredFrequency +
+                                        (1 | Subject)+ (1 | Word),
+                              family = "binomial", fixef = fixed_effects,
+                              VarCorr = random_variance, data = artificial_data)
+
+# lets have a look!
+summary(artificial_glmer)
+```
+***
+***
+
+#### **Create Lmer**
+
+While we will keep our focus on conducting a power analysis for the GLMM create above, we will also have a quick look at creating LMMs.
+Here, instead of *Correct* we include *Speed* (i.e. how fast the participants decided if the string was a word vs non-word) as the dependent variable and specify new values for our fixed effects and random variances.
+
+```{r}
+
+# ------------------------------------------ #
+# formula for GLMM
+formula_glmer <- Speed ~ NativeLanguage * CenteredFrequency + (1 | Subject) + (1 | Word)
+
+# ------------------------------------------ #
+# SPECIFY BETA COEFFICIENTS FOR FIXED EFFECTS
+fixed_effects <-  c(1.7, -0.25, 0.02, 0.03)
+
+# ------------------------------------------ #
+# SET RANDOM INTERCEPT VARIANCE
+random_variance <- list(0.007, 0.05)
+```
+
+Additionally, we need to specify the residual standard deviation (i.e. sigma).
+
+```{r}
+
+# ------------------------------------------ #
+# SET RESIDUAL STANDARD DEVIATION
+sigma <- 0.26
+```
+
+As can be seen in the Figure below, specifying different sigmas heavily influences the power of the resulting model - with higher sigma leading to lower power (Kumle, Vo & Draschkow, in preparation).
+
+![](/Users/leah/Dropbox/Power/manuscript/BRM/notebooks/plot_Sigma_Notebook3.png)
+
+Now we can hand all parameters to the *makeLmer()-function*.
+```{r}
+
+# ------------------------------------------ #
+# CREATE LMER
+artificial_lmer <- makeLmer(formula = Speed ~ NativeLanguage * CenteredFrequency +
+                                      (1 | Subject) + (1 | Word),
+                           fixef = fixed_effects, VarCorr = random_variance, sigma = sigma,
+                           data = artificial_data)
+
+# lets have a look!
+summary(artificial_lmer)
+```
+&nbsp;
+
+### Power analysis
+
+
+Now that we have data and a model fit to it we can start with the actual power analysis. Since the power simulation from this point onwards follows the same steps as in [Notebook 1](https://lkumle.github.io/power_notebooks/Scenario1_notebook.html) and [Notebook 2](https://lkumle.github.io/power_notebooks/Scenario2_notebook.html), we will only focus on a simple power simulation. More complex simulations varying different parameters can be found in the preceding notebooks.
+
+&nbsp;   
+
+
+#### **simr**
+Using the **powerSim()** function provided by [*simr*](https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.12504) (Green & Macleod, 2016), we can simulate power for the exact parameter constellation handed into the simulation. All we have to specify is the model we want to simulate power for and, since simr can only simulate power for one effect at a time, the effect we want to test. First, we will simulate power for the artificial LMM.
+
+```{r eval = F}
+
+# ------------------------------------------ #
+# POWER ANALYSIS WITH SIMR
+power_simr <- powerSim(artificial_lmer, test= fixed("NativeLanguage"))
+```
+
+```{r include=FALSE}
+# load output in the background
+load("~/Dropbox/Power/manuscript/BRM/analyses_BRM/Scenario 3/S3_simr_NL.Rdata")
+
+```
+
+Let's have a look at the result: As we can see, including 20 subjects, each of whom reads 100 words, and the model parameter specified earlier result in a power of around 54%.
+```{r}
+
+# ------------------------------------------ #
+# let's have a look:
+print(power_simr)
+```
+Using *powerSim()* gave us a point estimate for one specific constellation of parameters. To explore different scenarios, we could change the model parameters while we set up the artificial data and repeat the power analysis with *powerSim()*.
+
+&nbsp;  
+
+#### **mixedpower**
+
+Naturally, we can also implement a power simulation with mixedpower and make use of its fast computational speed and the fact that it estimates power for all included effects simultaneously.
+Using **mixedpower()**,  we will conduct a quick power analysis exploring power for different sample sizes. Similar to [Notebook 1](https://lkumle.github.io/power_notebooks/Scenario1_notebook.html) and [Notebook 2](https://lkumle.github.io/power_notebooks/Scenario2_notebook.html), we will first assign all parameters explicitly.
+
+Here, we will use it to simulate power for the artificial GLMM.
+```{r eval=FALSE}
+
+# ------------------------------------------ #
+# INFORMATION ABOUT MODEL USED FOR SIMULATION
+
+model <- artificial_glmer # which model do we want to simulate power for?
+data <- artificial_data # data used to fit the model
+fixed_effects <- c("NativeLanguage", "CenteredFrequency") # all fixed effects specified in artificial_glmer
+simvar <- "Subject" # which random variable do we want to vary in the simulation?
+
+# ------------------------------------------ #
+# SIMULATION PARAMETERS
+steps <- c(20,60,100,140,180) # which sample sizes do we want to look at?
+critical_value <- 2 # which t/z value do we want to use to test for significance?
+n_sim <- 1000 # how many single simulations should be used to estimate power?
+
+# ------------------------------------------ #
+# INCLUDE SESOI SIMULATION
+SESOI <-c(-4.3,  0.30 ,-0.34, -0.27)) # specify SESOI (15% smaller betas)
+```
+&nbsp;    
+Note how we included a SESOI (i.e. smallest effect of interest) simulation. Even though the effect sizes are not coming from published data (which come with the risk of inflated effect sized) and we would optimally have specified SESOIs as our fixed effects already, this gives us the chance to estimate power for different possible effect sizes in the course of one simulation.
+&nbsp;
+
+Now, we will hand all parameters to the simulation function and wait for the results.
+
+```{r eval = F}
+# ------------------------------------------ #
+# RUN SIMULATION WITH MIXEDPOWER
+power <- mixedpower(model = model, data = data,
+                       fixed_effects = c("NativeLanguage", "ScaledFrequency"),
+                       simvar = "Subject", steps = c(20,60,100,140,180),
+                       critical_value = 2, n_sim = 1000,
+                       SESOI = c(-4.3,  0.30 ,-0.34, -0.27))
+
+# ------------------------------------------ #
+# PLOT THE RESULTS
+multiplotPower(power)
+```
+
+```{r include=FALSE}
+# load output in the background
+load("~/Dropbox/Power/manuscript/BRM/analyses_BRM/Scenario 3/Glmer/S3_mixedpower_glmer.Rdata")
+power <- power_S3
+rownames(power) <- NULL
+
+```
+
+```{r}
+# ------------------------------------------ #
+# LOOK AT RESULTS
+power
+```
+
+```{r eval = F}
+# ------------------------------------------ #
+# PLOT THE RESULTS
+multiplotPower(power)
+```
+
+![](/Users/leah/Dropbox/Power/manuscript/BRM/analyses_BRM/Scenario 3/Glmer/plot_S3_mixedpower.png)
+
+&nbsp;  
+
+Finally, we need to transfer the plots and results into a decision regarding the sample size of our planned study. General guidance can be found in the accompanying tutorial paper. In this notebook, we will adapt a strategy resulting in > 80% power for all effects included in the model.
+Accordingly, we would base our decision on the effect with the overall lowest power (i.e. native language) as this will lead to an overall well powered design. Using the data-based estimate, we would test 180 subjects. However, if the effect would be 15% smaller (as indicated by the SESOI estimate) even 180 subjects would not be enough to ensure adequate power. 
+
+&nbsp;   
+
+We also strongly encourage users to simulate power for a range of plausible parameters concerning the artificial data as well as different levels of random effects to get an overview of factors that influence power in the planned design.
+
+***
+***
+
+### References
+
+Bates, D., Maechler, M., Bolker, B., & Walker, S. (2014). Fitting Linear Mixed-Effects Models using lme4. Journal of Statistical Software, 67(1). https://doi.org/10.18637/jss.v067.i01
+
+Green, P., & Macleod, C. J. (2016). SIMR: An R package for power analysis of generalized linear mixed models by simulation. Methods in Ecology and Evolution, 7(4), 493-498. [https://doi.org/10.1111/2041-210X.12504](https://doi.org/10.1111/2041-210X.12504)
+
+Kumle, L., Vo, M. L-H., & Draschkow, D. (2018). Mixedpower: a library for
+estimating simulation-based power for mixed models in R. https://doi.org/10.5281/zenodo.1341047
+
+Kumle, L., Vo, M. L-H., & Draschkow, D. (in preparation). Estimating power in linear and generalized linear mixed models: an open introduction and tutorial in R.
