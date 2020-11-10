@@ -1,0 +1,162 @@
+---
+title: "Supplementary Material"
+output:
+  html_document:
+    df_print: paged
+---
+
+Kumle, L., Vo, M. L-H., & Draschkow, D., latest update: October 2020
+
+Supplementary material for "Estimating power in (generalized) mixed models: an open introduction and tutorial in R."
+
+&nbsp;
+
+
+### **Benchmarking the mixedpower package**
+
+The following Supplementary Notebook aims at establishing the performance and accuracy of the newly introduced [mixedpower package](https://github.com/DejanDraschkow/mixedpower) (Kumle, Vo & Draschkow, 2018). Covering a range of different power analyses, we will compare the results computed with mixedpower with ones obtained with the [simr](https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.12504) package (Green & Macleod, 2016).
+
+
+The data set and power analysis approaches in the present notebook are inspired by the tutorial paper by [Brysbaert & Stevens (2018)](https://doi.org/10.5334/joc.10).   
+
+Data and analyses from Brysbaert & Stevens (2018) were retrieved from https://osf.io/5v7tc/. A complete implementation of all simulations featured in this Supplementary Notebook can be found at [https://github.com/lkumle/analyses_power_tutorial/tree/master/Supplementary%20Notebook](https://github.com/lkumle/analyses_power_tutorial/tree/master/Supplementary%20Notebook). All Notebooks linked to Kumle, Vo & Draschkow (in preparation) can be accessed [here](https://lkumle.github.io/power_notebooks/). 
+
+
+```{r eval = FALSE}
+# prepare
+library(lme4)
+library(mixedpower)
+library(simr)
+```
+
+&nbsp;  
+
+#### **Replicating power of Perea, Vergara-Martínez, and Gomez (2015)**
+
+Brysbaert & Stevens (2018) report power for a study conducted by Perea et al. (2015) which includes 40 subjects who each responded to 120 items. Here, the authors investigated the effect of repetition priming and found a priming effect of 39 ms. Following the approach taken by Brysbaert & Stephens (2018), we report power of the  Perea et al. (2015) study for observing priming effects of different magnitudes. Here, the size  of the priming effect (REPETITION=="repeated") on the dependent variable invRT is manipulated. We computed power for the same effect sizes using A) powerSim() included in simr, B) mixedpower() and C) R2power() included in mixedpower. Simulations with all functions included 1000 repetitions (nsim = 1000) and were based on the following model:
+
+
+```{r eval = FALSE}
+## fit mode (use numeric sub and item identifier)
+fit2 <- lmer(invRT ~ REPETITION + (1|ITEM) + (REPETITION|SUBJECT), data=perea)
+```
+&nbsp;
+
+##### Power for different effect sizes
+
+Seen below is the implementation of a power analysis for a 15 ms priming effect using mixedpower(), R2power() and powerSim(). Following the approach taken by Brysbaert & Stevens (2018), adding 25 ms to the RT in one condition will leave us with a priming effect of 15 ms. All three functions run a power analysis including 40 subjects who each see 120 items. We then repeated this approach with priming effects of different sizes and report the results in Table 1.
+
+```{r eval = FALSE}
+# manipulate priming effect
+perea1 <- subset(perea, REPETITION=="unrelated")
+perea2 <- subset(perea, REPETITION=="repeated")
+perea2$RT = perea2$RT+25
+perea3 <-rbind(perea1,perea2)
+perea3$invRT <- -1000/perea3$RT
+
+fit <- lmer(invRT ~ REPETITION + (1|ITEM) + (REPETITION|SUBJECT), data=perea3)
+
+# estimate power for 15 ms priming effect with mixedpower()
+# --> number of item is explicitly set to 120 and number of subjects (n = 40 )
+#     is inferred from the data
+power_15ms  <- mixedpower(model = fit, data = perea3,
+                           fixed_effects = c("REPETITION"),
+                           simvar = "ITEM", steps = c(120),
+                           critical_value = 2, n_sim = 1000,
+                           SESOI = F, databased = T)
+
+# estimate power for 15 ms priming effect with R2power()
+# --> number of item is explicitly set to 120 and number of subjects to 40
+
+power_15ms  <- mixedpower(model = fit, data = perea3,
+                          fixed_effects = c("REPETITION"),
+                          simvar = "ITEM", steps = c(120),
+                          critical_value = 2, n_sim = 1000,
+                          SESOI = F, databased = T, 
+                          R2var = "SUBJECT", R2level = 40)
+
+# estimating power with simr (powerSim())
+# --> simulates power for number of subjects/items found in data
+power_15ms_simr <- powerSim(fit,nsim=1000)
+```
+&nbsp;
+
+__Comparison of results __
+
+![](/Users/leah/Dropbox/Power/manuscript/BRM/Reviews/benchmarking/table_3.png)
+
+_Table 1_. Results for different effect sizes using the mixedpower(), R2power() and powerSim(). All simulations are based on 1000 repetitions, 40 subjects and 120 items.
+
+
+&nbsp;   
+
+##### Power for different sample sizes/ number of stimuli
+
+As can be seen in Table 1, a priming effect of 15 ms still yielded around 90% power (for 40 subjects and 120 items). Next, we successively varied the number of subjects and items for the Perea et al. (2015) data set containing a 15 ms priming effect. Here, we compare the powerCurve()-function in simr to the mixedpower()-function and R2power()-function in mixedpower. All functions have been handed the same model and data and all simulations are based on 1000 repetitions. The results are depicted in Figure 1 which reveals that powerCurve(), R2power() and mixedpower() show comparable results.
+
+```{r eval = FALSE}
+
+## POWER ANALYSIS WITH MIXEDPOWER()
+# simulating power for different sample sizes
+power_subs  <- mixedpower(model = fit, data = perea3,
+                         fixed_effects = c("REPETITION"),
+                         simvar = "SUBJECT",
+                         steps = c(3,7,11,15,19,24,28,32,36,40),
+                         critical_value = 2, n_sim = 1000,
+                         SESOI = F, databased = T)
+
+# simulating power for different number of stimuli
+power_items  <- mixedpower(model = fit, data = perea3,
+                          fixed_effects = c("REPETITION"),
+                          simvar = "ITEM",
+                          steps = c(3,16,29,42,55,68,81,94,107,120),
+                          critical_value = 2, n_sim = 1000,
+                          SESOI = F, databased = T)
+
+
+## POWER ANALYSIS WITH R2POWER()
+# simulating power for different sample sizes
+power_subs_R2  <- mixedpower(model = fit, data = perea3,
+                         fixed_effects = c("REPETITION"),
+                         simvar = "SUBJECT", steps = c(3,7,11,15,19,24,28,32,36,40),
+                         critical_value = 2, n_sim = 1000,
+                         SESOI = F, databased = T, 
+                         R2var = "ITEM", R2level = 120) # number of items explicitly fixed to 120
+
+# simulating power for different number of stimuli
+power_item_R2  <- mixedpower(model = fit, data = perea3,
+                             fixed_effects = c("REPETITION"),
+                             simvar = "ITEM", steps = c(3,16,29,42,55,68,81,94,107,120),
+                             critical_value = 2, n_sim = 1000,
+                             SESOI = F, databased = T, 
+                             R2var = "SUBJECT", R2level = 40) # number of items explicitly fixed to 40
+
+
+## POWER ANALYSIS WITH SIMR
+power_itm <- powerCurve(fit, along = "ITEM", nsim = 1000) # power for different number of stimuli
+power_sub <- powerCurve(fit, along = "SUBJECT", nsim = 1000) # power for different sample sizes
+```
+&nbsp;
+
+__Comparison of results __
+
+![](/Users/leah/Dropbox/Power/manuscript/BRM/Reviews/benchmarking/figure_1.png)
+_Figure 1_. Power for the Perea et al. (2015) data set with a 15 ms priming effect using powerCurve(), mixedpower() and R2power().
+
+&nbsp;
+
+
+
+***
+***
+
+#### References    
+
+Brysbaert, M., & Stevens, M. (2018). Power Analysis and Effect Size in Mixed Effects Models: A Tutorial. Journal of Cognition, 1(1). [https://doi.org/10.5334/joc.10](https://doi.org/10.5334/joc.10)
+
+Green, P., & Macleod, C. J. (2016). SIMR: An R package for power analysis of generalized linear mixed models by simulation. Methods in Ecology and Evolution, 7(4), 493-498. [https://doi.org/10.1111/2041-210X.12504](https://doi.org/10.1111/2041-210X.12504)
+
+Kumle, L., Vo, M. L-H., & Draschkow, D. (2018). Mixedpower: a library for
+estimating simulation-based power for mixed models in R. [https://doi.org/10.5281/zenodo.1341047](https://doi.org/10.5281/zenodo.1341047)
+
+Perea, M., Vergara-Martinez, M., & Gomez, P. (2015). Resolving the locus of case alternation effects in visual word recognition: Evidence from masked priming. Cognition, 142, 39–43. DOI: [https://doi. org/10.1016/j.cognition.2015.05.007](https://doi. org/10.1016/j.cognition.2015.05.007)
