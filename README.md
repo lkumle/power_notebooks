@@ -20,6 +20,8 @@ The following Notebooks aim at accompanying the Scenarios in Kumle, Vo & Draschk
 
 **Supplementary Notebook:** [Benchmarking mixedpower](https://lkumle.github.io/power_notebooks/Supplementary_notebook.html)
 
+**Nested Designs:** [A GLMM example](https://lkumle.github.io/power_notebooks/nestedGLMM_notebook.html)
+
 
 ### mixedpower package
 
