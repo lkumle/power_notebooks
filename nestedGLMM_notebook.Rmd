@@ -1,0 +1,208 @@
+---
+title: 'Nested random effects: A GLMM example.'
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+Kumle, L., Vo, M. L-H., & Draschkow, D.
+
+latest update: November 2020
+
+&nbsp;
+
+This Notebook serves as an additional resource for Kumle, Vo & Draschkow (in preperation). While the main tutorial focusses on power analyses in (generalized) linear mixed models ((G)LMMs) with crossed random effects, this notebook briefly demonstrates the use of both the [*simr*](https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.12504) package (Green & Macleod, 2016) as well as the [*mixedpower* ](https://github.com/DejanDraschkow/mixedpower) package (Kumle, Vo & Draschkow, 2018) for designs with nested random effects.
+
+For a more detailed introduction to both packages and their utilities, we recommend starting with the Scenarios introduced in the [main tutorial paper](https://psyarxiv.com/vxfbh) and the corresponding Notebooks ([Notebook 1](https://lkumle.github.io/power_notebooks/Scenario1_notebook.html), [Notebook 2](https://lkumle.github.io/power_notebooks/Scenario2_notebook.html), [Notebook 3](https://lkumle.github.io/power_notebooks/Scenario3_notebook.html)).
+Additionally, more detailed information regarding the simr package can be found in [Green & MacLeod (2016)](https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.12504) and its [documentation](https://cran.r-project.org/web/packages/simr/simr.pdf).
+
+***
+***
+
+### Example study: Patients nested in doctors and hospitals
+
+Let us consider the second scenario introduced in this ["Mixed effects logistic regression" tutorial](https://stats.idre.ucla.edu/r/dae/mixed-effects-logistic-regression/):
+
+>> A large HMO wants to know what patient and physician factors are most related to whether a patient’s lung cancer goes into remission after treatment as part of a larger study of treatment outcomes and quality of life in patients with lunger cancer.
+
+In the current Notebook, we will extend their analysis by conducting a power analysis based on the three level logistic model with a random intercept for doctors and a random intercept for hospitals seen below (cf. [model m3b](https://stats.idre.ucla.edu/r/dae/mixed-effects-logistic-regression/)). A detailed description of the data as well as all predictors can be found in the original tutorial.  
+
+```{r message=FALSE, warning=FALSE}
+library(lme4)
+
+# load data:
+hdp <- read.csv("https://stats.idre.ucla.edu/stat/data/hdp.csv")
+
+# preprocess data according to tutorial:
+hdp <- within(hdp, {
+  Married <- factor(Married, levels = 0:1, labels = c("no", "yes"))
+  DID <- factor(DID)
+  HID <- factor(HID)
+  CancerStage <- factor(CancerStage)
+})
+
+
+# fit model:
+model_final <- glmer(remission ~ Age + LengthofStay + FamilyHx + IL6 + CRP + CancerStage +
+               Experience + (1 + LengthofStay | DID) + (1 | HID), data = hdp, family = binomial,
+              nAGQ = 1)
+
+summary(model_final, corr = F)
+```
+
+***
+***
+### Simple power analysis
+
+First, we will utilize the simr to perform a quick and simple power analysis. Using the powerSim()-function included in simr, we can simulate power for a specified fixed effect and use the design parameters found in the data to inform the model. Precisely, we will simulate power for the predictor "Age" for all 8,525 patients who are nested in 407 doctors, who again are nested in 35 hospitals.
+
+Note: Due to the complexity of the model used to inform the power simulation, all simulations included in this notebook are very time-consuming. To increase speed we limited the simulation repetitions to 100. However, we strongly recommend increasing this number whenever actual sample size planning is being conducted.
+
+```{r, eval = F}
+library(simr)
+# power analysis with simr for effect "Age"
+power <- powerSim(model_final, test = fixed("Age"), nsim = 100)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# load output in the background
+load("~/Dropbox/Power/manuscript/BRM/notebooks/nested_powerSim_Age.Rdata")
+library(simr)
+print(power)
+```
+&nbsp;  
+
+
+The output of the power simulation tells us that with 8,525 patients who are nested in 407 doctors, who again are nested in 35 hospitals, the design would have a power of 64% for the predictor "Age".   
+
+What if we are also interested in power for other predictors? Using the same command in simr, we can simulate power for different fixed effects. All we have to do is specifying the effect of interest. Let's assume we want to estimate power for the second predictor "Length of stay":
+
+```{r, eval = F}
+# power analysis with simr for effect "Length of Stay"
+power <- powerSim(model_final, test = fixed("LengthofStay"), nsim = 100)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# load output in the background
+load("~/Dropbox/Power/manuscript/BRM/notebooks/nested_powerSim_LengthofStay.Rdata")
+print(power)
+```
+
+&nbsp;  
+
+Clearly, estimated power for different fixed effects differs greatly (which is to be expected since the magnitude of the fixed effects included in our model differ) and a design with 8,525 patients who are nested in 407 doctors, who again are nested in 35 hospitals would have a power of 98% to detect the effect of "Length of Stay".
+
+***
+***
+
+### Changing the number of levels in random variables
+
+So far, we estimated power for single fixed effects and used the sample sizes (8,525 patients, 407 doctors, 35 hospitals) found in the data set to inform the power simulation. However, a method for A) changing sample sizes and B) estimating power for multiple (or all) fixed effects would be helpful.
+
+Given the our design has different sample sizes for different levels (patients, doctors, hospitals), being able to explore the effect of changes on each level would be extremely informative. Here, simr offers different easy to implement options. First, we will make use of the powerCurve()-function which allows to estimate power over a range of sample sizes.
+
+Since our future study is aiming to detect the fixed effect "Length of Stay", we can explore power for smaller sample sizes. First, we will vary the number of doctors. What if instead of 407 doctors, patients would be nested in 100 or 200 doctors?   
+To answer this question, we will simulate "along" the random variable "DID" (i.e. "Doctor ID") and specify 100 and 200 as sample sizes.
+
+```{r, eval = F}
+# power analysis with simr for different numbers of doctors
+power <- powerCurve(model_final, test = fixed("LengthofStay"), along = "DID", breaks = c(100, 200), nsim = 100)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# load output in the background
+load("~/Dropbox/Power/manuscript/BRM/notebooks/nested_powerCurve_LengthofStay.Rdata")
+print(power)
+```
+&nbsp;  
+
+However, so far we mainly looked at the effects of "Length of Stay" and "Age". Being able to estimate power for multiple fixed effects would save us the time of having to repeat the above analysis for different fixed effects. Here, we will utilize [mixedpower](https://github.com/DejanDraschkow/mixedpower) and the included R2power()-function. To do so, a few design parameters need to be specified to inform the simulation (see [Notebook 1](https://lkumle.github.io/power_notebooks/Scenario1_notebook.html) for more details):
+
+Besides the model and data used to inform the simulation, we need to specify the variable names of all fixed effects, which random variable we want to simulate along (i.e. simvar) and which sample sizes we want to explore (i.e. steps). Additionally, we need to specify a critical value (i.e. t or z value) used to determine statistical significance during the simulation process and how many repetitions the simulation should entail (i.e. n_sim).
+
+In the simulation below we will explore power for all fixed effects in a design with 100, 200 and 407 doctors (who each sees 21 patients on average), who are nested in different hospitals. To keep the number of hospitals constant at 35, we will explicitly specify the number of the second random variable (i.e. R2var = hospital ID (HID)) to 35 using the R2level- argument.
+
+Note: The mixedpower package is tailored towards designs with crossed random factors and might provide less accurate and time efficient results in use cases with nested random designs.
+
+```{r, eval = F}
+library(mixedpower)
+
+fixed_effects <- c("Age", "LengthofStay",  "FamilyHx" , "IL6", "CRP",  "CancerStage" ,"Experience")
+
+power <- R2power(model = model_final, data = hdp,
+                    fixed_effect, simvar = "DID",
+                    steps = c(100, 200,407),
+                    critical_value = 2, n_sim = 100,
+                    R2var = "HID", R2level = 35)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# load output in the background
+load("~/Dropbox/Power/manuscript/BRM/notebooks/R2power_databased.Rdata")
+rownames(power) <-NULL
+print(power)
+```
+
+***
+***
+
+### Power for different effect sizes
+
+So far, our power analyses relied on the exact effect size found in the data used to inform the simulation. However, adopting effect sizes from published data involves the risk of performing the analyses on inflated effect sizes, which in turn would result in an underpowered design. Consequentially, being able to modify the expected effect size is vital.
+
+Both the simr and mixedpower package provide methods to specify the expected effect size by changing the beta coefficient of the fixed effect in the model used to inform the simulation.
+
+Using simr and the command seen below, we can change the beta coefficient in advance of the power simulation. We chose to repeat the simple power analysis from above for the effect "Length of stay" expecting an effect 50 % smaller than the effect found in the data.
+
+```{r, eval = F}
+# power analysis with simr for specified effect size
+fixef(model_final)["LengthofStay"] <- -0.095
+
+power <- powerSim(model_final, test = fixed("LengthofStay"), nsim = 100)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# load output in the background
+load("~/Dropbox/Power/manuscript/BRM/notebooks/nested_powerSim_SESOI.Rdata")
+print(power)
+```
+&nbsp;  
+
+A similar approach can be found in the mixedpower package, which allows to specify a **smallest effect of interest** through changing the beta coefficients of the fixed effects in the model used to inform the simulation. Since we will estimate power for all fixed effects at the same time, we also need to provide adjusted beta coefficients for all of them. Here, we chose to decrease each effect by 20% and keep the intercept constant. Then, we can hand the adjusted effect sizes to the R2power function (SESOI parameter). Additionally, we will set databased = T, since we already ran a simulation with the beta coefficients found in the data used to fit the model.
+
+```{r, eval = F}
+# decrease all effects by 20% but keep intercept constant
+SESOI <- c(-0.54, model_final@beta[2:10]*0.80)
+
+power <- R2power(model = model_final, data = hdp,
+                    fixed_effect, simvar = "DID",
+                    steps = c(100, 200,407),
+                    critical_value = 2, n_sim = 100,
+                    R2var = "HID", R2level = 35,
+                    SESOI = SESOI, databased = F) # include SESOI
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# load output in the background
+load("~/Dropbox/Power/manuscript/BRM/notebooks/nested_mixedpower_R2_DID.Rdata")
+rownames(power) <-NULL
+print(power)
+```
+
+Using the plotting function (multiplotPower()) included in mixedpower, we can then visualize the results. Here, we plot both the databased and SESOI analysis with R2power(). 
+
+![](/Users/leah/Dropbox/Power/manuscript/BRM/notebooks/nested_mp_plot.png)
+
+***
+***
+
+### References
+
+Bates, D., Maechler, M., Bolker, B., & Walker, S. (2014). Fitting Linear Mixed-Effects Models using lme4. Journal of Statistical Software, 67(1). https://doi.org/10.18637/jss.v067.i01
+
+Green, P., & Macleod, C. J. (2016). SIMR: An R package for power analysis of generalized linear mixed models by simulation. Methods in Ecology and Evolution, 7(4), 493-498. [https://doi.org/10.1111/2041-210X.12504](https://doi.org/10.1111/2041-210X.12504)
+
+Kumle, L., Vo, M. L-H., & Draschkow, D. (2018). Mixedpower: a library for
+estimating simulation-based power for mixed models in R. https://doi.org/10.5281/zenodo.1341047
+
+Kumle, L., Vo, M. L-H., & Draschkow, D. (in preparation). Estimating power in linear and generalized linear mixed models: an open introduction and tutorial in R.
