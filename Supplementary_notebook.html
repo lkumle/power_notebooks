@@ -94,7 +94,6 @@ if (!!window.navigator.userAgent.match("MSIE 8")) {
     return this;
   };
 }(jQuery));
-  
 
 window.buildTabsets = function(tocID) {
 
@@ -112,7 +111,6 @@ window.buildTabsets = function(tocID) {
       return;
     var tabsetLevel = Number(match[1]);
     var tabLevel = tabsetLevel + 1;
-    
 
     // find all subheadings immediately below
     var tabs = tabset.find("div.section.level" + tabLevel);
@@ -1682,7 +1680,7 @@ power_15ms  &lt;- mixedpower(model = fit, data = perea3,
 # estimate power for 15 ms priming effect with R2power()
 # --&gt; number of item is explicitly set to 120 and number of subjects to 40
 
-power_15ms  &lt;- mixedpower(model = fit, data = perea3,
+power_15ms  &lt;- R2power(model = fit, data = perea3,
                           fixed_effects = c(&quot;REPETITION&quot;),
                           simvar = &quot;ITEM&quot;, steps = c(120),
                           critical_value = 2, n_sim = 1000,
@@ -1721,7 +1719,7 @@ power_items  &lt;- mixedpower(model = fit, data = perea3,
 
 ## POWER ANALYSIS WITH R2POWER()
 # simulating power for different sample sizes
-power_subs_R2  &lt;- mixedpower(model = fit, data = perea3,
+power_subs_R2  &lt;-R2power(model = fit, data = perea3,
                          fixed_effects = c(&quot;REPETITION&quot;),
                          simvar = &quot;SUBJECT&quot;, steps = c(3,7,11,15,19,24,28,32,36,40),
                          critical_value = 2, n_sim = 1000,
@@ -1729,7 +1727,7 @@ power_subs_R2  &lt;- mixedpower(model = fit, data = perea3,
                          R2var = &quot;ITEM&quot;, R2level = 120) # number of items explicitly fixed to 120
 
 # simulating power for different number of stimuli
-power_item_R2  &lt;- mixedpower(model = fit, data = perea3,
+power_item_R2  &lt;- R2power(model = fit, data = perea3,
                              fixed_effects = c(&quot;REPETITION&quot;),
                              simvar = &quot;ITEM&quot;, steps = c(3,16,29,42,55,68,81,94,107,120),
                              critical_value = 2, n_sim = 1000,
