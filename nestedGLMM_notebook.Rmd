@@ -7,11 +7,11 @@ output:
 ---
 Kumle, L., Vo, M. L-H., & Draschkow, D.
 
-latest update: November 2020
+latest update: May 2021
 
 &nbsp;
 
-This Notebook serves as an additional resource for Kumle, Vo & Draschkow (in preperation). While the main tutorial focusses on power analyses in (generalized) linear mixed models ((G)LMMs) with crossed random effects, this notebook briefly demonstrates the use of both the [*simr*](https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.12504) package (Green & Macleod, 2016) as well as the [*mixedpower* ](https://github.com/DejanDraschkow/mixedpower) package (Kumle, Vo & Draschkow, 2018) for designs with nested random effects.
+This Notebook serves as an additional resource for Kumle, Vo & Draschkow [(2021)](https://doi.org/10.3758/s13428-021-01546-0). While the main tutorial focusses on power analyses in (generalized) linear mixed models ((G)LMMs) with crossed random effects, this notebook briefly demonstrates the use of both the [*simr*](https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.12504) package (Green & Macleod, 2016) as well as the [*mixedpower* ](https://github.com/DejanDraschkow/mixedpower) package (Kumle, Vo & Draschkow, 2018) for designs with nested random effects.
 
 For a more detailed introduction to both packages and their utilities, we recommend starting with the Scenarios introduced in the [main tutorial paper](https://psyarxiv.com/vxfbh) and the corresponding Notebooks ([Notebook 1](https://lkumle.github.io/power_notebooks/Scenario1_notebook.html), [Notebook 2](https://lkumle.github.io/power_notebooks/Scenario2_notebook.html), [Notebook 3](https://lkumle.github.io/power_notebooks/Scenario3_notebook.html)).
 Additionally, more detailed information regarding the simr package can be found in [Green & MacLeod (2016)](https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.12504) and its [documentation](https://cran.r-project.org/web/packages/simr/simr.pdf).
@@ -205,4 +205,4 @@ Green, P., & Macleod, C. J. (2016). SIMR: An R package for power analysis of gen
 Kumle, L., Vo, M. L-H., & Draschkow, D. (2018). Mixedpower: a library for
 estimating simulation-based power for mixed models in R. https://doi.org/10.5281/zenodo.1341047
 
-Kumle, L., Vo, M. L-H., & Draschkow, D. (in preparation). Estimating power in linear and generalized linear mixed models: an open introduction and tutorial in R.
+Kumle, L., Võ, M.LH. & Draschkow, D. Estimating power in (generalized) linear mixed models: An open introduction and tutorial in R. Behav Res (2021). https://doi.org/10.3758/s13428-021-01546-0
