@@ -7,13 +7,13 @@ output:
 ---
 Kumle, L., Vo, M. L-H., & Draschkow, D.
 
-latest update: November 2020
+latest update: May 2021
 
 ***
 
 
 
-This notebook supplements Scenario 3 in Kumle, Vo & Draschkow (in preparation) where detailed theoretical background concerning the analyses can be found.
+This notebook supplements Scenario 3 in Kumle, Vo & Draschkow [(2021)](https://doi.org/10.3758/s13428-021-01546-0) where detailed theoretical background concerning the analyses can be found.
 
 
 For a general introduction to simulation-based power analyses as well as using simulations to explore power for different sample sizes, see [Scenario 1](https://lkumle.github.io/power_notebooks/Scenario1_notebook.html). Simulations focusing on exploring power for different number of stimuli or combinations of stimuli and subjects can be found in [Scenario 2](https://lkumle.github.io/power_notebooks/Scenario2_notebook.html).
@@ -25,7 +25,7 @@ Simulation-based power analyses for (generalized) linear mixed models typically 
 
 In the following notebook, we will focus on scenarios where no previous data exists or a researcher already has substantiated expectations of effect sizes, data and model structure. In such cases, it is possible to build data and model from scratch to bypass the lack of appropriate existing data. To do so, we will make use of the [*simr*](https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.12504) package (Green & Macleod, 2016) as well as the [*mixedpower* ](https://github.com/DejanDraschkow/mixedpower) package (Kumle, Vo & Draschkow, 2018).
 
-This approach comes with a range of theoretical concerns which can be found in the accompanying tutorial (Kumle, Vo & Draschkow, in preparation). We strongly recommend getting familiar with those concerns as well as how they effect the power of the resulting design.
+This approach comes with a range of theoretical concerns which can be found in the accompanying tutorial (Kumle, Vo & Draschkow, [2021](https://doi.org/10.3758/s13428-021-01546-0)). We strongly recommend getting familiar with those concerns as well as how they effect the power of the resulting design.
 
 ***
 ***
@@ -113,7 +113,7 @@ artificial_data <- expand.grid(Subject = subject_ID, Word = stimuli_ID)
 ##### **Fixed effects**
 
 Next, we need to include the fixed effects *native language* and *frequency*.
-Let’s start with native language, which we agreed to have two levels (English vs. Non-English). We will code those two levels using the labels -0.5 for English speakers and 0.5 for Non-English speakers and will keep both groups balanced (i.e. including as many English speakers as Non-English speakers in our sample). Note, that unbalanced groups lead to reduced power (Kumle, Vo & Draschkow, in preparation) and should therefore be considered when planning sample size and recruitment.
+Let’s start with native language, which we agreed to have two levels (English vs. Non-English). We will code those two levels using the labels -0.5 for English speakers and 0.5 for Non-English speakers and will keep both groups balanced (i.e. including as many English speakers as Non-English speakers in our sample). Note, that unbalanced groups lead to reduced power (Kumle, Vo & Draschkow, [2021](https://doi.org/10.3758/s13428-021-01546-0)) and should therefore be considered when planning sample size and recruitment.
 
 ```{r}
 # 1. create vector including identifier for native language
@@ -226,7 +226,7 @@ Additionally, we need to specify the residual standard deviation (i.e. sigma).
 sigma <- 0.26
 ```
 
-As can be seen in the Figure below, specifying different sigmas heavily influences the power of the resulting model - with higher sigma leading to lower power (Kumle, Vo & Draschkow, in preparation).
+As can be seen in the Figure below, specifying different sigmas heavily influences the power of the resulting model - with higher sigma leading to lower power (Kumle, Vo & Draschkow, [2021](https://doi.org/10.3758/s13428-021-01546-0)).
 
 ![](/Users/leah/Dropbox/Power/manuscript/BRM/notebooks/plot_Sigma_Notebook3.png)
 
@@ -369,4 +369,4 @@ Green, P., & Macleod, C. J. (2016). SIMR: An R package for power analysis of gen
 Kumle, L., Vo, M. L-H., & Draschkow, D. (2018). Mixedpower: a library for
 estimating simulation-based power for mixed models in R. https://doi.org/10.5281/zenodo.1341047
 
-Kumle, L., Vo, M. L-H., & Draschkow, D. (in preparation). Estimating power in linear and generalized linear mixed models: an open introduction and tutorial in R.
+Kumle, L., Võ, M.LH. & Draschkow, D. Estimating power in (generalized) linear mixed models: An open introduction and tutorial in R. Behav Res (2021). https://doi.org/10.3758/s13428-021-01546-0
