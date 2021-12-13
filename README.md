@@ -29,6 +29,8 @@ The following Notebooks aim at accompanying the Scenarios in Kumle, Vo & Draschk
 
 **GitHub:** https://github.com/DejanDraschkow/mixedpower
 
+**FAQ:** https://lkumle.github.io/power_notebooks/intro/FAQ_mixedpower.pdf
+
 
 
 
